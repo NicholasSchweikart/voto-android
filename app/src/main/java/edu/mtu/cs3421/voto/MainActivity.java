@@ -17,11 +17,15 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements ServiceConnection {
+public class MainActivity extends AppCompatActivity implements NetworkService.NetworkServiceListener {
     public static final String TAG = "Activity-Main";
 
     private NetworkService networkService;
+    private TextView connectionStatusTxt;
+    private EditText ipAddressTxt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,12 +34,18 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        connectionStatusTxt = (TextView) findViewById(R.id.connectionStatusTextView);
+        ipAddressTxt = (EditText) findViewById(R.id.ipEditText);
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show()
+                // Start connection attempt here
+                String ipAddress = ipAddressTxt.getText().toString();
+
             }
         });
     }
@@ -67,41 +77,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         super.onStart();
         Log.d(TAG, "onStart()");
 
-        Intent bindIntent = new Intent(this, NetworkService.class);
-        bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(networkServiceReciever, makeNetworkServiceIntentFilter());
     }
 
-    private IntentFilter makeNetworkServiceIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(NetworkService.ACTION_WHATEVER);
-
-        return intentFilter;
-    }
-
-
-    @Override
-    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-        networkService = ((NetworkService.MyLocalBinder)iBinder).getService();
-        Log.d(TAG, "onServiceConnected GaitService= " + networkService);
-
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName componentName) {
-        networkService = null;
-    }
-
-    private final BroadcastReceiver networkServiceReciever = new BroadcastReceiver() {
-
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            //*********************//
-            if (action.equals(NetworkService.ACTION_WHATEVER)) {
-                Log.d(TAG, "ready to go!");
-
-            }
-        }
-    };
 }
