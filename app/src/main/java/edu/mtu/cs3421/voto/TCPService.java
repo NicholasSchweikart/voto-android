@@ -38,8 +38,7 @@ public class TCPService {
     public void connect(String host, int port){
         this.HOST = host;
         this.PORT = port;
-        Thread thread = new Thread(connect);
-        thread.start();
+        new Thread(connect).start();
     }
     public void sendVote(char voteLetter) {
         byte[] message = new byte[2];
@@ -49,7 +48,7 @@ public class TCPService {
     }
 
 
-    class send extends Thread{
+    private class send extends Thread{
         private  byte[] message;
         send(byte[] message){
             this.message = message;
