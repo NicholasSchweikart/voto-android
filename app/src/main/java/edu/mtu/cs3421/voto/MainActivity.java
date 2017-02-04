@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity  {
         Log.d(TAG, "onStart()");
 
     }
-    
+
     public void onVoteSent() {
         Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
     }
@@ -93,6 +93,8 @@ public class MainActivity extends AppCompatActivity  {
             Log.d(TAG, "Name:" + name + "IP: " + ipAddress);
             hostIpTxt.setText(ipAddress);
             hostNameTxt.setText(name);
+
+            //TODO create UDPservice around the new IP
         }
     }
 }
