@@ -14,7 +14,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements TCPService.TCPserviceListener {
+public class MainActivity extends AppCompatActivity implements SessionFinder.SessionFinderListener {
     public static final String TAG = "Activity-Main";
 
     private TCPService tcpService;
@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity implements TCPService.TCPser
         connectionStatusTxt = (TextView) findViewById(R.id.connectionStatusTextView);
         ipAddressTxt = (EditText) findViewById(R.id.ipEditText);
 
-        tcpService = new TCPService(this);
-
+        SessionFinder sf = new SessionFinder(9876, this);
+        sf.start();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -53,7 +53,12 @@ public class MainActivity extends AppCompatActivity implements TCPService.TCPser
             }
         });
     }
-
+    
+    public void onHandshakeResponse(String hostAddress) {
+        //add to the list of possible selections?
+    }
+    
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -83,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements TCPService.TCPser
 
     }
 
-    @Override
+    
     public void onVoteSent() {
         Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
     }
