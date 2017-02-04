@@ -14,10 +14,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity implements UDPService.UDPServiceListener {
     public static final String TAG = "Activity-Main";
 
-    private TCPService tcpService;
+    private UDPService udpService;
 
     // UI Components
     private TextView hostNameTxt, hostIpTxt;
@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity  {
 
     }
 
+    @Override
     public void onVoteSent() {
         Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
     }
@@ -95,6 +96,7 @@ public class MainActivity extends AppCompatActivity  {
             hostNameTxt.setText(name);
 
             //TODO create UDPservice around the new IP
+            udpService = new UDPService(this, 9872, ipAddress, name);
         }
     }
 }
