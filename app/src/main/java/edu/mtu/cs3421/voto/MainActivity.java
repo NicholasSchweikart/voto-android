@@ -1,9 +1,9 @@
 package edu.mtu.cs3421.voto;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ButtonBarLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -40,8 +40,8 @@ public class MainActivity extends AppCompatActivity implements TCPService.TCPser
             @Override
             public void onClick(View view) {
 
-                String ipAddress = ipAddressTxt.getText().toString();
-                tcpService.connect(ipAddress,9871);
+                Intent reviewIntent = new Intent(MainActivity.this, SessionListActivity.class);
+                startActivityForResult(reviewIntent,1);
             }
         });
 
@@ -86,5 +86,14 @@ public class MainActivity extends AppCompatActivity implements TCPService.TCPser
     @Override
     public void onVoteSent() {
         Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "Got result from scanning network");
+        if (requestCode == 1 && data != null) {
+            String ipAddress = data.getStringExtra("IP_ADDRESS");
+            String name = data.getStringExtra("HOST_NAME");
+            Log.d(TAG, "Name:" + name + "IP: " + ipAddress);
+        }
     }
 }
