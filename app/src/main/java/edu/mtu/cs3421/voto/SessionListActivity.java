@@ -31,15 +31,14 @@ public class SessionListActivity extends Activity implements AdapterView.OnItemC
         sessionHostsAdapter = new SessionHostsAdapter(getApplicationContext(), arrayOfHosts);
         listView.setAdapter(sessionHostsAdapter);
 
-        //TODO start the udp discovery service and add all the hosts we find
+        //Start session finder with this as listener
         sf = new SessionFinder(9876, this);
         sf.start();
     }
 
-    public void onHandshakeResponse(String hostAddress) {
-
-        addItem(hostAddress, hostAddress);
-
+    @Override
+    public void onHandshakeResponse(String id, String hostAddress) {
+        addItem(id, hostAddress);
     }
 
     private void addItem(String name, String ip){

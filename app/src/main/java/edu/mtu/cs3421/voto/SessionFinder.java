@@ -25,7 +25,7 @@ public class SessionFinder extends Thread {
     
     
     public interface SessionFinderListener {
-        public void onHandshakeResponse(String hostAddress);
+        void onHandshakeResponse(String id, String hostAddress);
     }
     
     public SessionFinder(int p, SessionFinderListener s) {
@@ -58,9 +58,12 @@ public class SessionFinder extends Thread {
             while(scan)
             {
                 socket.receive(rp);
-                Log.d(TAG, "Got a reply from: " + rp.getAddress().getHostAddress() + " Received: " + new String(rp.getData()).trim());
-                if (new String(rp.getData()).trim().equals("VOTO_HANDSHAKE_RESPONSE")) {
-                    s.onHandshakeResponse(rp.getAddress().getHostAddress());
+                String inFromServer = new String(rp.getData()).trim();
+
+                Log.d(TAG, "Got a reply from: " + rp.getAddress().getHostAddress() + " Received: " + inFromServer);
+                if (inFromServer.startsWith("VOTO_HANDSHAKE_RESPONSE_")) {
+                    inFromServer = inFromServer.substring(24);
+                    s.onHandshakeResponse(inFromServer, rp.getAddress().getHostAddress());
                 }
             }
 
