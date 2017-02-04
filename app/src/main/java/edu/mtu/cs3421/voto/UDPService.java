@@ -64,7 +64,7 @@ public class UDPService {
                         Log.d(TAG, "Send Successful");
                         sendSuccessful =true;
                     }catch (SocketTimeoutException e){
-                        Log.d(TAG,"Timout Reached, resending...");
+                        Log.d(TAG,"Timeout Reached, resending...");
                     }
                 }
 

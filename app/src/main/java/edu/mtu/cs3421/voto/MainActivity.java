@@ -1,9 +1,9 @@
 package edu.mtu.cs3421.voto;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ButtonBarLayout;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
@@ -14,7 +14,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements TCPService.TCPserviceListener {
+public class MainActivity extends AppCompatActivity  {
     public static final String TAG = "Activity-Main";
 
     private TCPService tcpService;
@@ -32,16 +32,13 @@ public class MainActivity extends AppCompatActivity implements TCPService.TCPser
         connectionStatusTxt = (TextView) findViewById(R.id.connectionStatusTextView);
         ipAddressTxt = (EditText) findViewById(R.id.ipEditText);
 
-        tcpService = new TCPService(this);
-
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                String ipAddress = ipAddressTxt.getText().toString();
-                tcpService.connect(ipAddress,9871);
+                Intent reviewIntent = new Intent(MainActivity.this, SessionListActivity.class);
+                startActivityForResult(reviewIntent,1);
             }
         });
 
@@ -53,7 +50,12 @@ public class MainActivity extends AppCompatActivity implements TCPService.TCPser
             }
         });
     }
-
+    
+    public void onHandshakeResponse(String hostAddress) {
+        //add to the list of possible selections?
+    }
+    
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -83,8 +85,17 @@ public class MainActivity extends AppCompatActivity implements TCPService.TCPser
 
     }
 
-    @Override
+    
     public void onVoteSent() {
         Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "Got result from scanning network");
+        if (requestCode == 1 && data != null) {
+            String ipAddress = data.getStringExtra("IP_ADDRESS");
+            String name = data.getStringExtra("HOST_NAME");
+            Log.d(TAG, "Name:" + name + "IP: " + ipAddress);
+        }
     }
 }
