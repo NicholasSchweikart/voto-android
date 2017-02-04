@@ -16,7 +16,29 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:id="@+id/serverNameLayout"
+        android:paddingBottom="10dp">
+
+        <TextView
+            android:text="Host Name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/hostNameTextView"
+            android:textSize="24sp" />
+
+        <TextView
+            android:text="IP Address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/hostIpTextView" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/serverNameLayout">
 
         <Button
             android:text="A"
@@ -47,28 +69,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/button5" />
-
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:ems="10"
-            android:id="@+id/ipEditText"
-            android:hint="ip address" />
-
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:text="no connection"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/connectionStatusTextView"
-                android:layout_weight="1"
-                android:textAlignment="center" />
-        </LinearLayout>
 
     </LinearLayout>
 </RelativeLayout>

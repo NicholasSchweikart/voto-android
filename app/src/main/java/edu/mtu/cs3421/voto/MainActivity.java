@@ -18,8 +18,9 @@ public class MainActivity extends AppCompatActivity  {
     public static final String TAG = "Activity-Main";
 
     private TCPService tcpService;
-    private TextView connectionStatusTxt;
-    private EditText ipAddressTxt;
+
+    // UI Components
+    private TextView hostNameTxt, hostIpTxt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +30,8 @@ public class MainActivity extends AppCompatActivity  {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        connectionStatusTxt = (TextView) findViewById(R.id.connectionStatusTextView);
-        ipAddressTxt = (EditText) findViewById(R.id.ipEditText);
+        hostIpTxt = (TextView)findViewById(R.id.ipAddressTextView);
+        hostNameTxt = (TextView) findViewById(R.id.hostNameTextView);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -46,16 +47,11 @@ public class MainActivity extends AppCompatActivity  {
         aButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                tcpService.sendVote('A');
+                //TODO Send Vote Here over UDP
             }
         });
     }
-    
-    public void onHandshakeResponse(String hostAddress) {
-        //add to the list of possible selections?
-    }
-    
-    
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -84,7 +80,6 @@ public class MainActivity extends AppCompatActivity  {
         Log.d(TAG, "onStart()");
 
     }
-
     
     public void onVoteSent() {
         Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
@@ -96,6 +91,8 @@ public class MainActivity extends AppCompatActivity  {
             String ipAddress = data.getStringExtra("IP_ADDRESS");
             String name = data.getStringExtra("HOST_NAME");
             Log.d(TAG, "Name:" + name + "IP: " + ipAddress);
+            hostIpTxt.setText(ipAddress);
+            hostNameTxt.setText(name);
         }
     }
 }
