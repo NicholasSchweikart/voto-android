@@ -12,7 +12,7 @@ import java.net.InetAddress;
  * Description:
  */
 
-public class SessionFinder extends Thread{
+public class SessionFinder extends Thread {
 
     public static final String TAG = "Session-Finder";
 
@@ -20,15 +20,22 @@ public class SessionFinder extends Thread{
     private InetAddress GROUP = null;
     private final int PORT;
     private boolean scan = true;
-
-    public SessionFinder(int p) {
+   
+    SessionFinderListener s;
+    
+    
+    public interface SessionFinderListener {
+        public void onHandshakeResponse(String hostAddress);
+    }
+    
+    public SessionFinder(int p, SessionFinderListener s) {
         PORT = p;
         try {
             GROUP = InetAddress.getByName("224.0.0.3");
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        this.s = s;
     }
 
     @Override
@@ -50,9 +57,11 @@ public class SessionFinder extends Thread{
 
             while(scan)
             {
-
                 socket.receive(rp);
                 Log.d(TAG, "Got a reply from: " + rp.getAddress().getHostAddress() + " Received: " + new String(rp.getData()).trim());
+                if (new String(rp.getData()).trim().equals("VOTO_HANDSHAKE_RESPONSE")) {
+                    s.onHandshakeResponse(rp.getAddress().getHostAddress());
+                }
             }
 
             socket.close();
