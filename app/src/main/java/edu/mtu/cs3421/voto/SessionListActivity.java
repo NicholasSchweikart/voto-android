@@ -11,11 +11,13 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 
-public class SessionListActivity extends Activity implements AdapterView.OnItemClickListener {
+public class SessionListActivity extends Activity implements AdapterView.OnItemClickListener, SessionFinder.SessionFinderListener {
 
     private ArrayList<SessionHost> arrayOfHosts;
     SessionHostsAdapter sessionHostsAdapter;
     ListView listView;
+
+    SessionFinder sf = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -30,6 +32,14 @@ public class SessionListActivity extends Activity implements AdapterView.OnItemC
         listView.setAdapter(sessionHostsAdapter);
 
         //TODO start the udp discovery service and add all the hosts we find
+        sf = new SessionFinder(9876, this);
+        sf.start();
+    }
+
+    public void onHandshakeResponse(String hostAddress) {
+
+        addItem(hostAddress, hostAddress);
+
     }
 
     private void addItem(String name, String ip){

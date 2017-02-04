@@ -14,7 +14,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements SessionFinder.SessionFinderListener {
+public class MainActivity extends AppCompatActivity  {
     public static final String TAG = "Activity-Main";
 
     private TCPService tcpService;
@@ -31,9 +31,6 @@ public class MainActivity extends AppCompatActivity implements SessionFinder.Ses
 
         connectionStatusTxt = (TextView) findViewById(R.id.connectionStatusTextView);
         ipAddressTxt = (EditText) findViewById(R.id.ipEditText);
-
-        SessionFinder sf = new SessionFinder(9876, this);
-        sf.start();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
