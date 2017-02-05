@@ -2,10 +2,7 @@ package edu.mtu.cs3421.voto;
 
 import android.util.Log;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
+import java.net.*;
 
 /**
  * Created for Voto
@@ -18,15 +15,22 @@ public class UDPService {
     public static final String TAG = "UDP-Service";
     private final UDPServiceListener listener;
     private int PORT;
-    private String HOST;
+    private String HOST_ID;
     private DatagramSocket datagramSocket;
 
-    UDPService(UDPServiceListener in){
+    private InetAddress serverAddress;
+
+    UDPService(UDPServiceListener in, int p, String hostName, String server_id){
         listener = in;
+        PORT = p;
+
         try {
+            serverAddress = InetAddress.getByName(hostName);
+            HOST_ID = server_id;
+
             datagramSocket = new DatagramSocket();
             Log.d(TAG, "IP: " + datagramSocket.getInetAddress() + "PORT:" + datagramSocket.getLocalPort());
-        } catch (SocketException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -52,7 +56,7 @@ public class UDPService {
         @Override
         public void run(){
             Log.d(TAG, "Sending Vote");
-            DatagramPacket packet = new DatagramPacket(message,message.length);
+            DatagramPacket packet = new DatagramPacket(message,message.length, serverAddress, PORT);
             try {
                 datagramSocket.send(packet);
                 datagramSocket.setSoTimeout(200);
