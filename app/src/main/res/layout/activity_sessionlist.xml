@@ -1,13 +1,24 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="400dp"
     tools:context="edu.mtu.cs3421.voto.SessionListActivity">
 
     <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:text="Available Sessions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+        android:textAlignment="center" />
+
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@+id/textView"
         android:id="@+id/list"
-        android:layout_gravity="center" />
+        android:layout_gravity="center"
+        android:dividerHeight="3sp"
+         />
 </RelativeLayout>
