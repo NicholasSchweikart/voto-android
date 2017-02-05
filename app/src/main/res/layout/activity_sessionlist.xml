@@ -1,20 +1,13 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="400dp"
-    tools:context="edu.mtu.cs3421.voto.SessionListActivity"
-    android:layout_centerHorizontal="true"
-    android:layout_centerInParent="true"
-    android:layout_gravity="center"
-    android:background="@android:color/background_light">
+    android:layout_height="match_parent"
+    tools:context="edu.mtu.cs3421.voto.SessionListActivity">
 
     <!-- TODO: Update blank fragment layout -->
-
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/list"
-        android:layout_gravity="center"
-        android:cacheColorHint="@android:color/background_light"
-        android:background="@android:color/background_light" />
+        android:layout_gravity="center" />
 </RelativeLayout>

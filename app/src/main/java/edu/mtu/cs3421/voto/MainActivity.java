@@ -18,10 +18,9 @@ public class MainActivity extends AppCompatActivity  {
     public static final String TAG = "Activity-Main";
 
     private TCPService tcpService;
-
-    // UI Components
-    private TextView hostNameTxt, hostIpTxt;
-
+    TextView hostIpTxt, hostNameTxt;
+    private String name, ip;
+    boolean update = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,8 +29,8 @@ public class MainActivity extends AppCompatActivity  {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        hostIpTxt = (TextView)findViewById(R.id.ipAddressTextView);
-        hostNameTxt = (TextView) findViewById(R.id.hostNameTextView);
+         hostIpTxt = (TextView)findViewById(R.id.hostIpTextView);
+         hostNameTxt = (TextView) findViewById(R.id.hostNameTextView);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -78,9 +77,14 @@ public class MainActivity extends AppCompatActivity  {
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart()");
-
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG,"onResume()");
+
+    }
     public void onVoteSent() {
         Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
     }
@@ -88,9 +92,11 @@ public class MainActivity extends AppCompatActivity  {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d(TAG, "Got result from scanning network");
         if (requestCode == 1 && data != null) {
+
             String ipAddress = data.getStringExtra("IP_ADDRESS");
             String name = data.getStringExtra("HOST_NAME");
             Log.d(TAG, "Name:" + name + "IP: " + ipAddress);
+            update = true;
             hostIpTxt.setText(ipAddress);
             hostNameTxt.setText(name);
 

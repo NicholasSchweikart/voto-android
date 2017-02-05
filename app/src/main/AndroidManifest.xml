@@ -21,8 +21,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".SessionListActivity"
-            android:parentActivityName=".MainActivity"
-            android:theme="@android:style/Theme.Dialog">
+            android:parentActivityName=".MainActivity">
 
         </activity>
     </application>
