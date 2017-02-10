@@ -5,8 +5,8 @@ import android.os.Message;
 import android.util.Log;
 
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.DatagramSocket;
 
 /**
  * Created for Voto
@@ -28,9 +28,9 @@ public class SessionFinder extends Thread {
     public SessionFinder(int p, Handler handler) {
         PORT = p;
         try {
-            GROUP = InetAddress.getByName("224.0.0.3");
+            GROUP = InetAddress.getByName("224.0.1.35");
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.d(TAG, "Failed to get mutlicast IP");
         }
         this.handler = handler;
     }
@@ -39,6 +39,7 @@ public class SessionFinder extends Thread {
     public void run() {
         try {
             socket = new DatagramSocket();
+            socket.setBroadcast(true);
 
             byte[] send = "VOTO_HANDSHAKE_REQUEST".getBytes();
 
