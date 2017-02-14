@@ -20,10 +20,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SessionListActivity"
+        <activity
+            android:name=".SessionListActivity"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/Theme.AppCompat.Dialog">
-        </activity>
+            android:theme="@style/Theme.AppCompat.Dialog" />
+        <activity android:name=".ActiveSessionActivity" />
+        <activity android:name=".JoinActivity"></activity>
     </application>
 
 </manifest>

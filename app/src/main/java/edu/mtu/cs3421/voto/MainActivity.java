@@ -26,29 +26,9 @@ public class MainActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
-         hostIpTxt = (TextView)findViewById(R.id.hostIpTextView);
-         hostNameTxt = (TextView) findViewById(R.id.hostNameTextView);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                Intent reviewIntent = new Intent(MainActivity.this, SessionListActivity.class);
-                startActivityForResult(reviewIntent,1);
-            }
-        });
-
-        Button aButton = (Button)findViewById(R.id.a_button);
-        aButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //TODO Send Vote Here over UDP
-            }
-        });
     }
 
     @Override
@@ -85,22 +65,5 @@ public class MainActivity extends AppCompatActivity  {
         Log.d(TAG,"onResume()");
 
     }
-    public void onVoteSent() {
-        Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
-    }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "Got result from scanning network");
-        if (requestCode == 1 && data != null) {
-
-            String ipAddress = data.getStringExtra("IP_ADDRESS");
-            String name = data.getStringExtra("HOST_NAME");
-            Log.d(TAG, "Name:" + name + "IP: " + ipAddress);
-            update = true;
-            hostIpTxt.setText(ipAddress);
-            hostNameTxt.setText(name);
-
-            //TODO create UDPservice around the new IP
-        }
-    }
 }
