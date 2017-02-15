@@ -2,6 +2,8 @@ package edu.mtu.cs3421.voto;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -14,13 +16,14 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import static edu.mtu.cs3421.voto.R.id.add;
+import static edu.mtu.cs3421.voto.R.id.joinButton;
+
 public class MainActivity extends AppCompatActivity  {
     public static final String TAG = "Activity-Main";
+    private EditText addressEditText;
 
-    private TCPService tcpService;
-    TextView hostIpTxt, hostNameTxt;
-    private String name, ip;
-    boolean update = false;
+    private String ipAddress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +32,27 @@ public class MainActivity extends AppCompatActivity  {
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
+        Button joinButton = (Button)findViewById(R.id.joinButton);
+        Button hostButton = (Button)findViewById(R.id.hostButton);
+
+        addressEditText = (EditText)findViewById(R.id.ipEditText);
+
+        joinButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ipAddress = addressEditText.getText().toString();
+                // The result will come back through the handler.
+                new UDPService(handler,ipAddress).sendHandshake();
+            }
+        });
+
+        hostButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ipAddress = "null";
+                startSession();
+            }
+        });
     }
 
     @Override
@@ -66,4 +90,20 @@ public class MainActivity extends AppCompatActivity  {
 
     }
 
+    private void startSession(){
+        Intent intent = new Intent(getApplicationContext(),ActiveSessionActivity.class);
+        intent.putExtra("IP_ADDRESS_STRING", ipAddress);
+        startActivity(intent);
+    }
+
+    final Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            if(msg.what==SystemConstants.MESSAGE_SUCCESS){
+                Log.d(TAG, "Message was sent successfully");
+                startSession();
+            }
+            super.handleMessage(msg);
+        }
+    };
 }
