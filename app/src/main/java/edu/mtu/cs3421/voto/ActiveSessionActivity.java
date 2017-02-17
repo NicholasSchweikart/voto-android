@@ -2,7 +2,6 @@ package edu.mtu.cs3421.voto;
 
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,7 +10,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.github.jorgecastilloprz.FABProgressCircle;
 
@@ -28,9 +26,13 @@ public class ActiveSessionActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        // Retrieve the HOST ip address from the intent.
         String ipAddressString = getIntent().getStringExtra("IP_ADDRESS_STRING");
-        if(ipAddressString != "null")
+        if(ipAddressString != "null"){
+
+            // Create the UDPService that will handle this entire session.
             udpService = new UDPService(handler,ipAddressString);
+        }
 
         // Initialize all the voting buttons
         aBtn = (FABProgressCircle)findViewById(R.id.aButton);
@@ -42,6 +44,21 @@ public class ActiveSessionActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Catch all asyc message results from the UDP Service here.
+     */
+    final Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            if(msg.what==UDPService.MESSAGE_SUCCESS){
+                Log.d(TAG, "Message was sent successfully");
+                //TODO respond based on what we where trying to do
+            }
+            super.handleMessage(msg);
+        }
+    };
+
+    //------------- Menu Click Handling Area --------------------
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -59,15 +76,4 @@ public class ActiveSessionActivity extends AppCompatActivity {
                 return false;
         }
     }
-
-    final Handler handler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            if(msg.what==SystemConstants.MESSAGE_SUCCESS){
-                Log.d(TAG, "Message was sent successfully");
-                //TODO respond baised on what we where trying to do
-            }
-            super.handleMessage(msg);
-        }
-    };
 }

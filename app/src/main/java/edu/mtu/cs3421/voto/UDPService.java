@@ -17,9 +17,18 @@ public class UDPService {
 
     public static final String TAG = "UDP-Service";
 
-    private int HOST_PORT;
+    // Message Headers
+    public static final String VOTE_HEADER = "VOTO_placeVote",
+            HANDSHAKE_HEADER = "VOTO_handshakeRequest";
+
+    // Handler response values
+    public static final int
+            MESSAGE_SUCCESS = 1,
+            MESSAGE_FAILURE = 2;
+
+    private int HOST_PORT, MY_PORT;
     private DatagramSocket datagramSocket;
-    private InetAddress HOST_INET_ADDRESS;
+    private InetAddress HOST_INET_ADDRESS, MY_INET_ADDRESS;
 
     private Handler handler;
 
@@ -32,29 +41,30 @@ public class UDPService {
             HOST_INET_ADDRESS = InetAddress.getByName(HOST_IP_STRING);
             datagramSocket = new DatagramSocket();
             datagramSocket.setSoTimeout(200);
-            Log.d(TAG, "IP: " + datagramSocket.getInetAddress() + "PORT:" + datagramSocket.getLocalPort());
+            MY_INET_ADDRESS = datagramSocket.getInetAddress();
+            MY_PORT = datagramSocket.getPort();
+            Log.d(TAG, "IP: " + MY_INET_ADDRESS + "PORT:" + MY_PORT);
+
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error could build new datagram socket!");
         }
     }
 
     public void sendVote(char voteLetter) {
-        byte[] message = new byte[11];
-        message = SystemConstants.VOTE_HEADER.getBytes();
-        message[10] = ((byte)voteLetter);
-        new send(message).start();
+        String messageString = VOTE_HEADER + voteLetter;
+        new send(messageString.getBytes()).start();
     }
 
     public void sendHandshake(){
-        byte[] message = SystemConstants.HANDSHAKE_HEADER.getBytes();
-        new send(message).start();
+        String messageString = HANDSHAKE_HEADER + MY_INET_ADDRESS + '_' + MY_PORT;
+        new send(messageString.getBytes()).start();
     }
 
     private class send extends Thread{
 
         private  byte[] message;
         byte[] buffer = new byte[512];
-        private boolean sendSuccessful = false;
+
         send(byte[] message){
             this.message = message;
         }
@@ -62,26 +72,35 @@ public class UDPService {
         @Override
         public void run(){
             Log.d(TAG, "Sending Message");
-
+            int attempts = 0;
+            Message msg = handler.obtainMessage();
             DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
 
-            while(!sendSuccessful){
+            while(true){
                 try {
                     datagramSocket.send(packet);
                     DatagramPacket rp = new DatagramPacket(buffer, buffer.length);
                     datagramSocket.receive(rp);
+
                     Log.d(TAG, "Send Successful");
-                    sendSuccessful = true;
+                    msg.what = MESSAGE_SUCCESS;
+                    handler.sendMessage(msg);
+
                 }catch (SocketTimeoutException e){
+
                     Log.d(TAG,"Timeout Reached, resending...");
+                    if(attempts == 6){
+                        Log.e(TAG, "Error to many attempts with no response!");
+                        msg.what = MESSAGE_SUCCESS;
+                        handler.sendMessage(msg);
+                        return;
+                    }
+                    attempts += 1;
+
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.e(TAG, "IO Error on send");
                 }
             }
-
-            Message msg = handler.obtainMessage();
-            msg.what = SystemConstants.MESSAGE_SUCCESS;
-            handler.sendMessage(msg);
         }
     }
 }

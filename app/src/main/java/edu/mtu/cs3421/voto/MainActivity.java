@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity  {
     final Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
-            if(msg.what==SystemConstants.MESSAGE_SUCCESS){
+            if(msg.what==UDPService.MESSAGE_SUCCESS){
                 Log.d(TAG, "Message was sent successfully");
                 startSession();
             }

@@ -6,8 +6,5 @@ package edu.mtu.cs3421.voto;
 
 public class SystemConstants {
 
-    public static final String VOTE_HEADER = "VOTO_placeVote",
-            HANDSHAKE_HEADER = "VOTO_handshakeRequest";
 
-    public static final int MESSAGE_SUCCESS = 1;
 }
