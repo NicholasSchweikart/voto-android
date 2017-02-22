@@ -6,36 +6,39 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="edu.mtu.cs3421.voto.ActiveSessionActivity"
-    android:background="@android:color/background_light">
+    >
 
     <include layout="@layout/tool_bar"
         android:id="@+id/tool_bar">
-
     </include>
 
-    <com.ogaclejapan.arclayout.ArcLayout
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:arc_origin="bottom|right"
-        app:arc_radius="168dp"
-        app:arc_axisRadius="270dp"
-        app:arc_freeAngle="false"
-        app:arc_reverseAngle="false"
+        app:srcCompat="@drawable/lecture"
+        android:id="@+id/imageView"
         android:layout_below="@+id/tool_bar"
-        android:background="@android:color/transparent"
-        android:elevation="0dp">
+        android:scaleType="fitCenter"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:elevation="3dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true"
+        android:id="@+id/controlsOverlay"
+        android:visibility="invisible">
 
         <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            app:arc_origin="center">
+            android:layout_height="wrap_content">
 
             <com.github.jorgecastilloprz.FABProgressCircle
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:arcColor="#00ffff"
-                app:arcWidth="7dp"
+                app:arcWidth="4dp"
                 android:id="@+id/aButton">
 
                 <android.support.design.widget.FloatingActionButton
@@ -43,7 +46,8 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     app:arc_origin="center"
-                    android:layout_margin="10dp"/>
+                    android:layout_margin="10dp"
+                    android:hapticFeedbackEnabled="false" />
             </com.github.jorgecastilloprz.FABProgressCircle>
 
             <TextView
@@ -58,15 +62,14 @@
 
         <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            app:arc_origin="center">
+            android:layout_height="wrap_content">
 
             <com.github.jorgecastilloprz.FABProgressCircle
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:arcColor="#00ffff"
                 app:arcWidth="7dp"
+                android:id="@+id/bButton"
                 >
 
                 <android.support.design.widget.FloatingActionButton
@@ -89,9 +92,7 @@
 
         <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            app:arc_origin="center">
+            android:layout_height="wrap_content">
 
             <com.github.jorgecastilloprz.FABProgressCircle
                 android:layout_width="wrap_content"
@@ -120,9 +121,7 @@
 
         <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            app:arc_origin="center">
+            android:layout_height="wrap_content">
 
             <com.github.jorgecastilloprz.FABProgressCircle
                 android:layout_width="wrap_content"
@@ -150,6 +149,7 @@
         </FrameLayout>
 
 
-    </com.ogaclejapan.arclayout.ArcLayout>
+    </LinearLayout>
+
 
 </RelativeLayout>

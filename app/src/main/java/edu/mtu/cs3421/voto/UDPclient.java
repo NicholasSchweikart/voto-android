@@ -13,34 +13,34 @@ import java.net.*;
  * Description:
  */
 
-public class UDPService {
+public class UDPclient {
 
     public static final String TAG = "UDP-Service";
 
     // Message Headers
-    public static final String VOTE_HEADER = "VOTO_placeVote",
-            HANDSHAKE_HEADER = "VOTO_handshakeRequest";
+    public static final String
+            VOTE_HEADER = "vote_",
+            HANDSHAKE_HEADER = "handshakeRequest_";
 
     // Handler response values
     public static final int
-            MESSAGE_SUCCESS = 1,
-            MESSAGE_FAILURE = 2;
-
+            MESSAGE_TYPE_HANDSHAKE = 1,
+            MESSAGE_TYPE_VOTE = 2;
+    private final UDPServiceListener listener;
     private int HOST_PORT, MY_PORT;
     private DatagramSocket datagramSocket;
     private InetAddress HOST_INET_ADDRESS, MY_INET_ADDRESS;
 
     private Handler handler;
 
-    UDPService(Handler handler, String HOST_IP_STRING){
-        Log.d(TAG, "Building a UDP socket");
-
-        this.handler = handler;
+    UDPclient(UDPServiceListener listener, String HOST_IP_STRING){
+        Log.d(TAG, "Opening a UDP socket");
+        this.listener = listener;
         HOST_PORT = 9876;
         try {
             HOST_INET_ADDRESS = InetAddress.getByName(HOST_IP_STRING);
             datagramSocket = new DatagramSocket();
-            datagramSocket.setSoTimeout(200);
+            datagramSocket.setSoTimeout(100);
             MY_INET_ADDRESS = datagramSocket.getInetAddress();
             MY_PORT = datagramSocket.getPort();
             Log.d(TAG, "IP: " + MY_INET_ADDRESS + "PORT:" + MY_PORT);
@@ -50,30 +50,37 @@ public class UDPService {
         }
     }
 
-    public void sendVote(char voteLetter) {
-        String messageString = VOTE_HEADER + voteLetter;
-        new send(messageString.getBytes()).start();
+    public interface UDPServiceListener{
+        void onVoteSuccess(int message_id);
+        void onHandshakeResponse();
+    }
+
+    public void sendVote(char voteLetter, int voteID) {
+        String messageString = VOTE_HEADER + "_" + voteLetter;
+        new send(messageString.getBytes(),MESSAGE_TYPE_VOTE, voteID).start();
     }
 
     public void sendHandshake(){
-        String messageString = HANDSHAKE_HEADER + MY_INET_ADDRESS + '_' + MY_PORT;
-        new send(messageString.getBytes()).start();
+        String messageString = HANDSHAKE_HEADER + "_";
+        new send(messageString.getBytes(), MESSAGE_TYPE_HANDSHAKE, 0).start();
     }
 
     private class send extends Thread{
 
         private  byte[] message;
         byte[] buffer = new byte[512];
-
-        send(byte[] message){
+        private final int TYPE, voteID;
+        send(byte[] message, int TYPE, int voteID){
             this.message = message;
+            this.TYPE = TYPE;
+            this.voteID = voteID;
         }
 
         @Override
         public void run(){
             Log.d(TAG, "Sending Message");
             int attempts = 0;
-            Message msg = handler.obtainMessage();
+
             DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
 
             while(true){
@@ -83,16 +90,21 @@ public class UDPService {
                     datagramSocket.receive(rp);
 
                     Log.d(TAG, "Send Successful");
-                    msg.what = MESSAGE_SUCCESS;
-                    handler.sendMessage(msg);
+                    switch (TYPE){
+                        case MESSAGE_TYPE_HANDSHAKE:
+                            listener.onHandshakeResponse();
+                            break;
+                        case MESSAGE_TYPE_VOTE:
+                            listener.onVoteSuccess(voteID);
+                            break;
+                    }
 
                 }catch (SocketTimeoutException e){
 
                     Log.d(TAG,"Timeout Reached, resending...");
                     if(attempts == 6){
                         Log.e(TAG, "Error to many attempts with no response!");
-                        msg.what = MESSAGE_SUCCESS;
-                        handler.sendMessage(msg);
+
                         return;
                     }
                     attempts += 1;

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -13,13 +12,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import static edu.mtu.cs3421.voto.R.id.add;
-import static edu.mtu.cs3421.voto.R.id.joinButton;
-
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     public static final String TAG = "Activity-Main";
     private EditText addressEditText;
 
@@ -42,7 +36,7 @@ public class MainActivity extends AppCompatActivity  {
             public void onClick(View v) {
                 ipAddress = addressEditText.getText().toString();
                 // The result will come back through the handler.
-                new UDPService(handler,ipAddress).sendHandshake();
+                new UDPclient(MainActivity.this,ipAddress).sendHandshake();
             }
         });
 
@@ -96,14 +90,15 @@ public class MainActivity extends AppCompatActivity  {
         startActivity(intent);
     }
 
-    final Handler handler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            if(msg.what==UDPService.MESSAGE_SUCCESS){
-                Log.d(TAG, "Message was sent successfully");
-                startSession();
-            }
-            super.handleMessage(msg);
-        }
-    };
+
+    @Override
+    public void onVoteSuccess(int message_id) {
+
+    }
+
+    @Override
+    public void onHandshakeResponse() {
+        Log.d(TAG, "Handshake Recieved");
+        startSession();
+    }
 }
