@@ -81,7 +81,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     }
 
     @Override
-    public void onHandshakeResponse() {
+    public void onHandshakeResponse(String reply) {
 
     }
 

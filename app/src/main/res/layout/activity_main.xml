@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:hint="Enter Host Number"
             android:id="@+id/ipEditText"
-            android:inputType="numberDecimal" />
+            android:inputType="phone" />
 
         <Button
             android:text="Join Session"

@@ -97,8 +97,10 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
     }
 
     @Override
-    public void onHandshakeResponse() {
-        Log.d(TAG, "Handshake Recieved");
-        startSession();
+    public void onHandshakeResponse(String reply) {
+        if (!reply.startsWith("ERROR")) {
+            Log.d(TAG, "Handshake Recieved");
+            startSession();
+        }
     }
 }

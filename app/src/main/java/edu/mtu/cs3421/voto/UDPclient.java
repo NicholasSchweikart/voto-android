@@ -33,6 +33,8 @@ public class UDPclient {
 
     private Handler handler;
 
+    private String ID = "";
+
     UDPclient(UDPServiceListener listener, String HOST_IP_STRING){
         Log.d(TAG, "Opening a UDP socket");
         this.listener = listener;
@@ -40,7 +42,7 @@ public class UDPclient {
         try {
             HOST_INET_ADDRESS = InetAddress.getByName(HOST_IP_STRING);
             datagramSocket = new DatagramSocket();
-            datagramSocket.setSoTimeout(100);
+            datagramSocket.setSoTimeout(200);
             MY_INET_ADDRESS = datagramSocket.getInetAddress();
             MY_PORT = datagramSocket.getPort();
             Log.d(TAG, "IP: " + MY_INET_ADDRESS + "PORT:" + MY_PORT);
@@ -52,7 +54,7 @@ public class UDPclient {
 
     public interface UDPServiceListener{
         void onVoteSuccess(int message_id);
-        void onHandshakeResponse();
+        void onHandshakeResponse(String reply);
     }
 
     public void sendVote(char voteLetter, int voteID) {
@@ -61,11 +63,11 @@ public class UDPclient {
     }
 
     public void sendHandshake(){
-        String messageString = HANDSHAKE_HEADER + "_";
+        String messageString = HANDSHAKE_HEADER + ID;
         new send(messageString.getBytes(), MESSAGE_TYPE_HANDSHAKE, 0).start();
     }
 
-    private class send extends Thread{
+    private class send extends Thread {
 
         private  byte[] message;
         byte[] buffer = new byte[512];
@@ -83,16 +85,20 @@ public class UDPclient {
 
             DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
 
-            while(true){
+            boolean waitingReply = true;
+
+            while(waitingReply){
                 try {
                     datagramSocket.send(packet);
                     DatagramPacket rp = new DatagramPacket(buffer, buffer.length);
                     datagramSocket.receive(rp);
 
+                    waitingReply = false;
+
                     Log.d(TAG, "Send Successful");
                     switch (TYPE){
                         case MESSAGE_TYPE_HANDSHAKE:
-                            listener.onHandshakeResponse();
+                            listener.onHandshakeResponse(new String(rp.getData()).trim());
                             break;
                         case MESSAGE_TYPE_VOTE:
                             listener.onVoteSuccess(voteID);
