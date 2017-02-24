@@ -12,11 +12,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 public class MainActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     public static final String TAG = "Activity-Main";
     private EditText addressEditText;
-
     private String ipAddress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +38,18 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
             @Override
             public void onClick(View v) {
                 ipAddress = addressEditText.getText().toString();
-                // The result will come back through the handler.
-                new UDPclient(MainActivity.this,ipAddress).sendHandshake();
+
+                // The result will come back through the interface.
+                UDPclient udp = null;
+                try {
+                    udp = new UDPclient(MainActivity.this,ipAddress);
+                    udp.sendHandshake();
+                } catch (SocketException e) {
+                    Log.e(TAG, "Socket Exception");
+                } catch (UnknownHostException e) {
+                    Log.e(TAG, "Unknown Host Exception");
+                    Toast.makeText(MainActivity.this,"Invalid IP", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

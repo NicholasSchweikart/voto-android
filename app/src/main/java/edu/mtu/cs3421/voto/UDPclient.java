@@ -35,7 +35,7 @@ public class UDPclient {
 
     private String ID = "";
 
-    UDPclient(UDPServiceListener listener, String HOST_IP_STRING){
+    UDPclient(UDPServiceListener listener, String HOST_IP_STRING) throws SocketException, UnknownHostException {
         Log.d(TAG, "Opening a UDP socket");
         this.listener = listener;
         HOST_PORT = 9876;
@@ -49,6 +49,7 @@ public class UDPclient {
 
         } catch (Exception e) {
             Log.e(TAG, "Error could build new datagram socket!");
+            throw e;
         }
     }
 

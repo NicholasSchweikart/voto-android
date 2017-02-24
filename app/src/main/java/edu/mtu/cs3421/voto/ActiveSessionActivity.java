@@ -19,8 +19,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.github.jorgecastilloprz.FABProgressCircle;
+
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 public class ActiveSessionActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     private static final String TAG = "Active-Session";
@@ -44,10 +48,20 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
         // Retrieve the HOST ip address from the intent.
         String ipAddressString = getIntent().getStringExtra("IP_ADDRESS_STRING");
-        if(ipAddressString.equals("null")){
+        if(!ipAddressString.equals("null")){
 
             // Create the UDPclient that will handle this entire session.
-            UDPclient = new UDPclient(this,ipAddressString);
+            // The result will come back through the interface.
+            UDPclient udp = null;
+            try {
+                udp = new UDPclient(ActiveSessionActivity.this,ipAddressString);
+                udp.sendHandshake();
+            } catch (SocketException e) {
+                Log.e(TAG, "Socket Exception");
+            } catch (UnknownHostException e) {
+                Log.e(TAG, "Unknown Host Exception");
+                Toast.makeText(ActiveSessionActivity.this,"Invalid IP", Toast.LENGTH_SHORT).show();
+            }
         }
 
         // Put the session id stuff up in the title bar
