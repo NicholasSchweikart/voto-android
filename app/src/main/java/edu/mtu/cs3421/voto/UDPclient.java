@@ -30,12 +30,11 @@ public class UDPclient {
     private int HOST_PORT, MY_PORT;
     private DatagramSocket datagramSocket;
     private InetAddress HOST_INET_ADDRESS, MY_INET_ADDRESS;
-
-    private Handler handler;
+    private boolean serviceReady;
 
     private String ID = "";
 
-    UDPclient(UDPServiceListener listener, String HOST_IP_STRING) throws UnknownHostException {
+    UDPclient(UDPServiceListener listener, String HOST_IP_STRING){
         Log.d(TAG, "Opening a UDP socket");
         this.listener = listener;
         HOST_PORT = 9876;
@@ -46,12 +45,10 @@ public class UDPclient {
             MY_INET_ADDRESS = datagramSocket.getInetAddress();
             MY_PORT = datagramSocket.getPort();
             Log.d(TAG, "IP: " + MY_INET_ADDRESS + "PORT:" + MY_PORT);
-
-        } catch (UnknownHostException e) {
+            serviceReady = true;
+        } catch (Exception e) {
             Log.e(TAG, "Error could not build new datagram socket!");
-            throw e;
-        } catch (SocketException e) {
-            Log.e(TAG, "Socket Exception no build");
+            serviceReady = false;
         }
     }
 
@@ -60,6 +57,9 @@ public class UDPclient {
         void onHandshakeResponse(String reply);
     }
 
+    public boolean isServiceReady(){
+        return serviceReady;
+    }
     public void sendVote(char voteLetter, int voteID) {
         String messageString = VOTE_HEADER + "_" + voteLetter;
         new send(messageString.getBytes(),MESSAGE_TYPE_VOTE, voteID).start();
@@ -113,13 +113,15 @@ public class UDPclient {
                     Log.d(TAG,"Timeout Reached, resending...");
                     if(attempts == 6){
                         Log.e(TAG, "Error to many attempts with no response!");
-
+                        waitingReply = false;
                         return;
                     }
                     attempts += 1;
 
                 } catch (IOException e) {
                     Log.e(TAG, "IO Error on send");
+                    waitingReply = false;
+                    return;
                 }
             }
         }

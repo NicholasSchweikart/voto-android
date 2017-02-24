@@ -40,13 +40,11 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
                 ipAddress = addressEditText.getText().toString();
 
                 // The result will come back through the interface.
-                UDPclient udp = null;
-                try {
-                    udp = new UDPclient(MainActivity.this,ipAddress);
+                UDPclient udp = new UDPclient(MainActivity.this,ipAddress);
+                if(udp.isServiceReady()) {
                     udp.sendHandshake();
-                }catch (UnknownHostException e) {
-                    Log.e(TAG, "Unknown Host Exception");
-                    Toast.makeText(MainActivity.this,"Invalid IP", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(MainActivity.this,"Invalid IP",Toast.LENGTH_SHORT).show();
                 }
             }
         });
