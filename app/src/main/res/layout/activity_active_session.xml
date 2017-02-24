@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_active_session"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="edu.mtu.cs3421.voto.ActiveSessionActivity"
+    >
+
+    <include layout="@layout/tool_bar"
+        android:id="@+id/tool_bar">
+    </include>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@drawable/lecture"
+        android:id="@+id/imageView"
+        android:layout_below="@+id/tool_bar"
+        android:scaleType="fitCenter"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:elevation="3dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true"
+        android:id="@+id/controlsOverlay"
+        android:visibility="invisible">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <com.github.jorgecastilloprz.FABProgressCircle
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:arcColor="#00ffff"
+                app:arcWidth="4dp"
+                android:id="@+id/aButton">
+
+                <android.support.design.widget.FloatingActionButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    app:arc_origin="center"
+                    android:layout_margin="10dp"
+                    android:hapticFeedbackEnabled="false" />
+            </com.github.jorgecastilloprz.FABProgressCircle>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="A"
+                android:elevation="16dp"
+                android:textColor="@android:color/white"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <com.github.jorgecastilloprz.FABProgressCircle
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:arcColor="#00ffff"
+                app:arcWidth="7dp"
+                android:id="@+id/bButton"
+                >
+
+                <android.support.design.widget.FloatingActionButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    app:arc_origin="center"
+                    android:layout_margin="10dp"/>
+            </com.github.jorgecastilloprz.FABProgressCircle>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="B"
+                android:elevation="16dp"
+                android:textColor="@android:color/white"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <com.github.jorgecastilloprz.FABProgressCircle
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:arcColor="#00ffff"
+                app:arcWidth="7dp"
+                >
+
+                <android.support.design.widget.FloatingActionButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    app:arc_origin="center"
+                    android:layout_margin="10dp"/>
+            </com.github.jorgecastilloprz.FABProgressCircle>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="C"
+                android:elevation="16dp"
+                android:textColor="@android:color/white"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <com.github.jorgecastilloprz.FABProgressCircle
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:arcColor="#00ffff"
+                app:arcWidth="7dp"
+                >
+
+                <android.support.design.widget.FloatingActionButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    app:arc_origin="center"
+                    android:layout_margin="10dp"/>
+            </com.github.jorgecastilloprz.FABProgressCircle>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="D"
+                android:elevation="16dp"
+                android:textColor="@android:color/white"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+        </FrameLayout>
+
+
+    </LinearLayout>
+
+
+</RelativeLayout>

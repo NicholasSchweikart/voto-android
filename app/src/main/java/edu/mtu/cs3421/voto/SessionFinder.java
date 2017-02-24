@@ -1,10 +1,12 @@
 package edu.mtu.cs3421.voto;
 
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.DatagramSocket;
 
 /**
  * Created for Voto
@@ -20,28 +22,24 @@ public class SessionFinder extends Thread {
     private InetAddress GROUP = null;
     private final int PORT;
     private boolean scan = true;
-   
-    SessionFinderListener s;
-    
-    
-    public interface SessionFinderListener {
-        void onHandshakeResponse(String id, String hostAddress);
-    }
-    
-    public SessionFinder(int p, SessionFinderListener s) {
+
+    private Handler handler;
+
+    public SessionFinder(int p, Handler handler) {
         PORT = p;
         try {
-            GROUP = InetAddress.getByName("224.0.0.3");
+            GROUP = InetAddress.getByName("224.0.1.35");
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.d(TAG, "Failed to get mutlicast IP");
         }
-        this.s = s;
+        this.handler = handler;
     }
 
     @Override
     public void run() {
         try {
             socket = new DatagramSocket();
+            socket.setBroadcast(true);
 
             byte[] send = "VOTO_HANDSHAKE_REQUEST".getBytes();
 
@@ -63,7 +61,11 @@ public class SessionFinder extends Thread {
                 Log.d(TAG, "Got a reply from: " + rp.getAddress().getHostAddress() + " Received: " + inFromServer);
                 if (inFromServer.startsWith("VOTO_HANDSHAKE_RESPONSE_")) {
                     inFromServer = inFromServer.substring(24);
-                    s.onHandshakeResponse(inFromServer, rp.getAddress().getHostAddress());
+                    Log.d(TAG, "Posting to handler");
+                    Message msg = handler.obtainMessage();
+                    msg.what = SessionListActivity.ON_HOST;
+                    msg.obj = new SessionHost(inFromServer,rp.getAddress().getHostAddress());
+                    handler.sendMessage(msg);
                 }
             }
 

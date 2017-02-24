@@ -2,7 +2,8 @@ package edu.mtu.cs3421.voto;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -11,51 +12,54 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity  {
+import java.net.SocketException;
+import java.net.UnknownHostException;
+
+public class MainActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     public static final String TAG = "Activity-Main";
-
-    private TCPService tcpService;
-    private TextView connectionStatusTxt;
-    private EditText ipAddressTxt;
-
+    private EditText addressEditText;
+    private String ipAddress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
-        connectionStatusTxt = (TextView) findViewById(R.id.connectionStatusTextView);
-        ipAddressTxt = (EditText) findViewById(R.id.ipEditText);
+        Button joinButton = (Button)findViewById(R.id.joinButton);
+        Button hostButton = (Button)findViewById(R.id.hostButton);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        addressEditText = (EditText)findViewById(R.id.ipEditText);
+
+        joinButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View v) {
+                ipAddress = addressEditText.getText().toString();
 
-                Intent reviewIntent = new Intent(MainActivity.this, SessionListActivity.class);
-                startActivityForResult(reviewIntent,1);
+                // The result will come back through the interface.
+                UDPclient udp = null;
+                try {
+                    udp = new UDPclient(MainActivity.this,ipAddress);
+                    udp.sendHandshake();
+                }catch (UnknownHostException e) {
+                    Log.e(TAG, "Unknown Host Exception");
+                    Toast.makeText(MainActivity.this,"Invalid IP", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
-        Button aButton = (Button)findViewById(R.id.a_button);
-        aButton.setOnClickListener(new View.OnClickListener() {
+        hostButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                tcpService.sendVote('A');
+            public void onClick(View v) {
+                ipAddress = "null";
+                startSession();
             }
         });
     }
-    
-    public void onHandshakeResponse(String hostAddress) {
-        //add to the list of possible selections?
-    }
-    
-    
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -82,20 +86,32 @@ public class MainActivity extends AppCompatActivity  {
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart()");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG,"onResume()");
 
     }
 
-    
-    public void onVoteSent() {
-        Toast.makeText(this,"Vote Sent!", Toast.LENGTH_SHORT).show();
+    private void startSession(){
+        Intent intent = new Intent(getApplicationContext(),ActiveSessionActivity.class);
+        intent.putExtra("IP_ADDRESS_STRING", ipAddress);
+        startActivity(intent);
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d(TAG, "Got result from scanning network");
-        if (requestCode == 1 && data != null) {
-            String ipAddress = data.getStringExtra("IP_ADDRESS");
-            String name = data.getStringExtra("HOST_NAME");
-            Log.d(TAG, "Name:" + name + "IP: " + ipAddress);
+
+    @Override
+    public void onVoteSuccess(int message_id) {
+
+    }
+
+    @Override
+    public void onHandshakeResponse(String reply) {
+        if (!reply.startsWith("ERROR")) {
+            Log.d(TAG, "Handshake Recieved");
+            startSession();
         }
     }
 }
