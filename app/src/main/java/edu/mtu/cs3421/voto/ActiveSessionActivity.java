@@ -56,8 +56,6 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
             try {
                 udp = new UDPclient(ActiveSessionActivity.this,ipAddressString);
                 udp.sendHandshake();
-            } catch (SocketException e) {
-                Log.e(TAG, "Socket Exception");
             } catch (UnknownHostException e) {
                 Log.e(TAG, "Unknown Host Exception");
                 Toast.makeText(ActiveSessionActivity.this,"Invalid IP", Toast.LENGTH_SHORT).show();

@@ -44,9 +44,7 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
                 try {
                     udp = new UDPclient(MainActivity.this,ipAddress);
                     udp.sendHandshake();
-                } catch (SocketException e) {
-                    Log.e(TAG, "Socket Exception");
-                } catch (UnknownHostException e) {
+                }catch (UnknownHostException e) {
                     Log.e(TAG, "Unknown Host Exception");
                     Toast.makeText(MainActivity.this,"Invalid IP", Toast.LENGTH_SHORT).show();
                 }

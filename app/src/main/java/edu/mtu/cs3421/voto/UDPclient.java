@@ -35,7 +35,7 @@ public class UDPclient {
 
     private String ID = "";
 
-    UDPclient(UDPServiceListener listener, String HOST_IP_STRING) throws SocketException, UnknownHostException {
+    UDPclient(UDPServiceListener listener, String HOST_IP_STRING) throws UnknownHostException {
         Log.d(TAG, "Opening a UDP socket");
         this.listener = listener;
         HOST_PORT = 9876;
@@ -47,9 +47,11 @@ public class UDPclient {
             MY_PORT = datagramSocket.getPort();
             Log.d(TAG, "IP: " + MY_INET_ADDRESS + "PORT:" + MY_PORT);
 
-        } catch (Exception e) {
-            Log.e(TAG, "Error could build new datagram socket!");
+        } catch (UnknownHostException e) {
+            Log.e(TAG, "Error could not build new datagram socket!");
             throw e;
+        } catch (SocketException e) {
+            Log.e(TAG, "Socket Exception no build");
         }
     }
 
