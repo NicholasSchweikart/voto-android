@@ -48,7 +48,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
         // Retrieve the HOST ip address from the intent.
         String ipAddressString = getIntent().getStringExtra("IP_ADDRESS_STRING");
-        if(!ipAddressString.equals("null")){
+        if(ipAddressString.equals("null")){
 
             // Create the UDPclient that will handle this entire session.
             // The result will come back through the interface.

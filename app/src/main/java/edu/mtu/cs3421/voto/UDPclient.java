@@ -41,7 +41,7 @@ public class UDPclient {
         try {
             HOST_INET_ADDRESS = InetAddress.getByName(HOST_IP_STRING);
             datagramSocket = new DatagramSocket();
-            datagramSocket.setSoTimeout(200);
+            datagramSocket.setSoTimeout(500);
             MY_INET_ADDRESS = datagramSocket.getInetAddress();
             MY_PORT = datagramSocket.getPort();
             Log.d(TAG, "IP: " + MY_INET_ADDRESS + "PORT:" + MY_PORT);
