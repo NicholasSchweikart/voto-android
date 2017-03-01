@@ -121,6 +121,27 @@ public class MessageUtility {
         return null;
     }
 
+    public class Media{
+
+        byte imgID, totalPackets, expectingPacketNumber;
+        byte[] imgBuffer;
+        int imgSize;
+
+        Media(byte imgID, byte totalPackets, byte imgLength){
+            this.imgID = imgID;
+            this.totalPackets = totalPackets;
+            this.imgSize = imgLength;
+            imgBuffer = new byte[imgLength];
+            expectingPacketNumber = 1;
+        }
+
+        public void addData(byte[] data, byte packetNumber){
+            if(expectingPacketNumber == packetNumber){
+                //TODO add packet into data buffer
+            }
+        }
+    }
+
     public class MediaChunk{
         byte imgID, packetNumber;
         byte[] data;
