@@ -31,7 +31,8 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     Vibrator vibrator;
 
     // System Control Vars
-    private int voteID;
+    private byte voteID;
+    private String ID;
     private FABProgressCircle pendingVoteButton;
 
     @Override
@@ -109,22 +110,22 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
             pendingVoteButton.show();
 
             voteID += 1;                                // Increment the current vote_id
-            char vote = 'x';
+            String vote = null;
             switch (v.getId()){                         // Insert the correct vote letter
                 case R.id.aButton:
-                    vote = 'A';
+                    vote = "A";
                     break;
                 case R.id.bButton:
-                    vote = 'B';
+                    vote = "B";
                     break;
                 case R.id.cButton:
-                    vote = 'C';
+                    vote = "C";
                     break;
                 case R.id.dButton:
-                    vote = 'D';
+                    vote = "D";
                     break;
             }
-            UDPclient.sendVote(vote,voteID);            // Send of the new vote
+            UDPclient.sendVote(ID,vote,voteID);            // Send of the new vote
         }
     };
 

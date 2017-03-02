@@ -9,11 +9,12 @@ import java.nio.ByteBuffer;
 public class MessageUtility {
 
     public static final byte
-        HANDSHAKE_REQ_COM   = (byte) 'R',
-        VOTE_COM            = (byte) 'V',
-        MEDIA_REQUEST_COM   = (byte) 'M',
-        MEDIA_PING          = (byte) 'P',
-        MEDIA_REQ_RESPONSE  = (byte) 'R';
+            HANDSHAKE_REQUEST   = (byte) 'R',
+            VOTE_REQUEST        = (byte) 'V',
+            VOTE_RESPONSE        = (byte) 'R',
+            MEDIA_REQUEST       = (byte) 'M',
+            MEDIA_PING          = (byte) 'P',
+            MEDIA_RESPONSE      = (byte) 'R';
 
 
     /**
@@ -21,25 +22,25 @@ public class MessageUtility {
      * @param id your unique ID if you have one, NULL if not
      * @return the byte[] message
      */
-    public byte[] getHandshakeRequestMessage(String id){
+    public static byte[] getHandshakeRequestMessage(String id){
         byte[] message;
         int i = 0;
         if(id != null){
             byte len = (byte) id.length();
             byte[] idBuff = id.getBytes();
             message = new byte[ 1 + 1 + len];
-            message[i++] = HANDSHAKE_REQ_COM;
+            message[i++] = HANDSHAKE_REQUEST;
             message[i++] = len;
             System.arraycopy(idBuff,0,message,i,len);
         }else{
             message = new byte[ 1 + 1];
-            message[i++] = HANDSHAKE_REQ_COM;
-            message[i++] = 0;
+            message[i++] = HANDSHAKE_REQUEST;
+            message[i] = 0;
         }
         return message;
     }
 
-    public byte[] getVoteMessage(String id, String vote, byte voteID){
+    public static byte[] getVoteMessage(String id, String vote, byte voteID){
 
         byte[] message;
         int i = 0;
@@ -52,7 +53,7 @@ public class MessageUtility {
 
             // [ V | ID_LEN | ID_DATA | VOTE_ID | VOTE_LEN | VOTE_DATA]
             message = new byte[ 1 + 1 + idLength + 1 + 1 + voteLength];
-            message[i++] = VOTE_COM;
+            message[i++] = VOTE_REQUEST;
             message[i++] = idLength;
 
             // Copy in the ID data
@@ -67,7 +68,7 @@ public class MessageUtility {
         }else{
             // [ V | ID_LEN | VOTE_ID | VOTE_LEN | VOTE_DATA]
             message = new byte[ 1 + 1 + 1 + 1 + voteLength];
-            message[i++] = VOTE_COM;
+            message[i++] = VOTE_REQUEST;
             message[i++] = 0;           // No ID field
             message[i++] = voteID;
             message[i++] = voteLength;
@@ -78,32 +79,34 @@ public class MessageUtility {
         return message;
     }
 
-    public byte[] getMediaPingMessage(){
+    public static byte[] getMediaPingMessage(){
         byte[] message = new byte[1 + 1];
-        message[0] = MEDIA_REQUEST_COM;
+        message[0] = MEDIA_REQUEST;
         message[1] = MEDIA_PING;
         return message;
     }
 
-    public byte[] getMediaRequestMessage(byte imgID, byte packetNumber){
-        byte[] message = new byte[1 + 1 + 1 + 1];
-        message[0] = MEDIA_REQUEST_COM;
-        message[1] = MEDIA_REQ_RESPONSE;
+    public static byte[] getMediaRequestMessage(byte imgID, byte packetNumber){
+        byte[] message = new byte[4];
+        message[0] = MEDIA_REQUEST;
+        message[1] = MEDIA_RESPONSE;
         message[2] = imgID;
         message[3] = packetNumber;
         return message;
     }
 
-    public int parseVoteResponse(byte[] message){
-        int voteID;
-
-        return 0;
+    public static byte parseVoteResponse(byte[] message){
+        byte voteID = -1;
+        if(message[0] == VOTE_REQUEST && message[1] == VOTE_RESPONSE){
+            voteID = message[2];
+        }
+        return voteID;
     }
 
-    public MediaChunk parseMediaResponse(byte[] msg){
+    public static boolean parseMediaResponse(byte[] msg, Media media){
 
         // Check for proper message headers
-        if(msg[0] == MEDIA_REQ_RESPONSE && msg[1] == MEDIA_REQ_RESPONSE ){
+        if(msg[0] == MEDIA_REQUEST && msg[1] == MEDIA_RESPONSE ){
 
             // Extract image ID
             byte imgID = msg[2];
@@ -111,21 +114,25 @@ public class MessageUtility {
             // Extract packet number
             byte packetNumber = msg[3];
 
-            int payloadLength = ByteBuffer.wrap(msg,4,4).getInt();
+            if(media.imgID == imgID && media.expectingPacketNumber == packetNumber){
+                int payloadLength = ByteBuffer.wrap(msg,4,4).getInt();
 
-            byte[] payload = new byte[payloadLength];
-            System.arraycopy(msg,7,payload,0,payloadLength);
-            return new MediaChunk(imgID,packetNumber,payload);
+                byte[] payload = new byte[payloadLength];
+                System.arraycopy(msg,7,payload,0,payloadLength);
+                media.appendData(payload);
+            }
+            return true;
         }
 
-        return null;
+        return false;
     }
 
     public class Media{
 
         byte imgID, totalPackets, expectingPacketNumber;
         byte[] imgBuffer;
-        int imgSize;
+        int imgSize, cursor;
+        boolean ready = false;
 
         Media(byte imgID, byte totalPackets, byte imgLength){
             this.imgID = imgID;
@@ -133,22 +140,25 @@ public class MessageUtility {
             this.imgSize = imgLength;
             imgBuffer = new byte[imgLength];
             expectingPacketNumber = 1;
+            cursor = 0;
         }
 
-        public void addData(byte[] data, byte packetNumber){
-            if(expectingPacketNumber == packetNumber){
-                //TODO add packet into data buffer
+        public void appendData(byte[] data){
+
+            // Copy in the data
+            System.arraycopy(data,0,imgBuffer,cursor,data.length);
+
+            // Increment the position cursor and the expected packet.
+            cursor += data.length;
+            expectingPacketNumber += 1;
+
+            // Flag Media ready if we have gotten all the packets.
+            if(expectingPacketNumber > totalPackets){
+                ready = true;
             }
         }
+
+
     }
 
-    public class MediaChunk{
-        byte imgID, packetNumber;
-        byte[] data;
-        MediaChunk(byte imgID, byte packetNumber, byte[] data){
-            this.data = data;
-            this.imgID = imgID;
-            this.packetNumber = packetNumber;
-        }
-    }
 }

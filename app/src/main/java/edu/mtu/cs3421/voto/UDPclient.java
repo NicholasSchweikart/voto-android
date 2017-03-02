@@ -65,14 +65,12 @@ public class UDPclient {
         return serviceReady;
     }
 
-    public void sendVote(char voteLetter, int voteNumber) {
-        String messageString = VOTE_HEADER + "_" + voteLetter;
-        new send(messageString.getBytes(), MESSAGE_TYPE_VOTE, voteNumber).start();
+    public void sendVote(String id,String vote, byte voteNumber) {
+        new send(MessageUtility.getVoteMessage(id,vote,voteNumber), MESSAGE_TYPE_VOTE, voteNumber).start();
     }
 
-    public void sendHandshake() {
-        String messageString = HANDSHAKE_HEADER + ID;
-        new send(messageString.getBytes(), MESSAGE_TYPE_HANDSHAKE, 0).start();
+    public void sendHandshake(String id) {
+        new send(MessageUtility.getHandshakeRequestMessage(id), MESSAGE_TYPE_HANDSHAKE, 0).start();
     }
 
     private class send extends Thread {

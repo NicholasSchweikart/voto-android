@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         Button hostButton = (Button)findViewById(R.id.hostButton);
 
         addressEditText = (EditText)findViewById(R.id.ipEditText);
-
+        final String id = null; //TODO load in real ID.
         joinButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
                 // The result will come back through the interface.
                 UDPclient udp = new UDPclient(MainActivity.this,ipAddress);
                 if(udp.isServiceReady()) {
-                    udp.sendHandshake();
+                    udp.sendHandshake(id);
                 }else{
                     Toast.makeText(MainActivity.this,"Invalid IP",Toast.LENGTH_SHORT).show();
                 }
@@ -102,6 +102,16 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
 
     @Override
     public void onVoteSuccess(int message_id) {
+
+    }
+
+    @Override
+    public void onVoteFailure(int vote_id) {
+
+    }
+
+    @Override
+    public void onHandshakeFailure() {
 
     }
 
