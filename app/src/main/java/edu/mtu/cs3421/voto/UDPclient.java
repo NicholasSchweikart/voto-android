@@ -1,6 +1,7 @@
 package edu.mtu.cs3421.voto;
 
 import android.graphics.BitmapFactory;
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import java.io.IOException;
@@ -20,7 +21,6 @@ public class UDPclient {
 
     private final UDPServiceListener listener;
     private final int HOST_PORT;
-    private DatagramSocket datagramSocket;
     private InetAddress HOST_INET_ADDRESS;
     private boolean serviceReady;
     private BitmapFactory bitmapFactory;
@@ -32,19 +32,16 @@ public class UDPclient {
         HOST_PORT = 9876;
         try {
             HOST_INET_ADDRESS = InetAddress.getByName(HOST_IP_STRING);
-            datagramSocket = new DatagramSocket();
-            Log.d(TAG, "IP: " + datagramSocket.getLocalAddress().toString() + "PORT: " + datagramSocket.getPort());
             serviceReady = true;
         } catch (Exception e) {
-            Log.e(TAG, "Error could not build new datagram socket!");
+            Log.e(TAG, "Error invalid host!");
             serviceReady = false;
-            e.printStackTrace();
         }
     }
 
     public void setMyID(String id){
         if(id == null)
-            myID = datagramSocket.getLocalAddress().toString();
+            myID = "HELLO";
         else
             myID = id;
     }
@@ -78,7 +75,7 @@ public class UDPclient {
         private final int timeout = 500;
         private byte[] message;
         byte[] buffer = new byte[512];
-
+        private DatagramSocket datagramSocket;
         Handshake() {
 
         }
@@ -86,6 +83,13 @@ public class UDPclient {
         @Override
         public void run() {
             Log.d(TAG, "Attempting Handshake...");
+
+            datagramSocket = getDatagramSocket();
+            if(datagramSocket == null){
+                Log.e(TAG, "Hanshake Failure bad socket");
+                listener.onHandshakeFailure();
+                return;
+            }
 
             message = MessageUtility.getHandshakeRequestMessage(myID);
 
@@ -107,9 +111,9 @@ public class UDPclient {
     private class Voter extends Thread {
         private final int timeout = 500;
         private byte[] message;
-        byte[] buffer = new byte[512];
         private final String vote;
         private final byte voteNumber;
+        private DatagramSocket datagramSocket;
 
         Voter(String vote, byte voteNumber) {
             this.vote = vote;
@@ -119,6 +123,13 @@ public class UDPclient {
         @Override
         public void run() {
             Log.d(TAG, "Attempting Vote...");
+
+            datagramSocket = getDatagramSocket();
+            if(datagramSocket == null){
+                Log.e(TAG, "Vote Failure bad socket");
+                listener.onVoteFailure(voteNumber);
+                return;
+            }
 
             message = MessageUtility.getVoteMessage(myID,vote,voteNumber);
 
@@ -141,12 +152,20 @@ public class UDPclient {
     private class MediaLoader extends Thread{
         private final int timeout = 500;
         Media media;
+        private DatagramSocket datagramSocket;
+
         MediaLoader(){
 
         }
         @Override
         public void run() {
             Log.d(TAG, "Pinging for new slide...");
+
+            datagramSocket = getDatagramSocket();
+            if(datagramSocket == null){
+                Log.e(TAG, "Ping Failure bad socket");
+                return;
+            }
 
             // Get the initial media ping message.
             byte[] mediaPingMessage = MessageUtility.getMediaPingMessage();
@@ -218,7 +237,7 @@ public class UDPclient {
         byte[] buffer = new byte[bufferSize];
         while (true) {
             try {
-                datagramSocket.setSoTimeout(timeout);
+                socket.setSoTimeout(timeout);
                 socket.send(packet);
                 DatagramPacket rp = new DatagramPacket(buffer, buffer.length);
                 socket.receive(rp);
@@ -240,6 +259,17 @@ public class UDPclient {
                 return null;
             }
         }
+    }
+
+    private DatagramSocket getDatagramSocket(){
+        Log.d(TAG, "Opening new UDP socket");
+        DatagramSocket out = null;
+        try {
+            out = new DatagramSocket();
+        } catch (Exception e) {
+            Log.e(TAG, "Error could not build new datagram socket!");
+        }
+        return out;
     }
 
     class MediaResponse{
