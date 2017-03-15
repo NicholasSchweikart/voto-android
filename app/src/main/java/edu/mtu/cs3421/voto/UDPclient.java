@@ -236,7 +236,7 @@ public class UDPclient {
     class MediaResponse{
         int imgLength;
         byte imgID;
-        byte packetCount;
+        int packetCount;
         MediaResponse(){
 
         }

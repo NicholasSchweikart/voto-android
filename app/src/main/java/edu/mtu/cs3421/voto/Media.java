@@ -11,15 +11,15 @@ import android.util.Log;
 public class Media {
     private static final String TAG = "media";
     // Image Stuff
-    private byte imgID, totalPackets, expectingPacketNumber;
+    private byte imgID;
     private byte[] imgBuffer;
-    private int imgSize, cursor;
+    private int imgSize, cursor, totalPackets, expectingPacketNumber;
     private boolean ready = false;
     Bitmap bitmap;
 
     //TODO and Question fields like correct answer
 
-    Media(byte imgID, byte totalPackets, int imgLength){
+    Media(byte imgID, int totalPackets, int imgLength){
         this.imgID = imgID;
         this.totalPackets = totalPackets;
         this.imgSize = imgLength;
@@ -36,7 +36,7 @@ public class Media {
         System.arraycopy(data,0,imgBuffer,cursor,data.length);
 
         // Increment the position cursor and the expected packet.
-        cursor += data.length - 1;
+        cursor += data.length;
 
         expectingPacketNumber += 1;
 
@@ -58,5 +58,5 @@ public class Media {
     }
 
     public byte getImgID(){return imgID;}
-    public byte getExpectingPacketNumber(){return expectingPacketNumber;}
+    public int getExpectingPacketNumber(){return expectingPacketNumber;}
 }

@@ -88,12 +88,13 @@ public class MessageUtility {
         return message;
     }
 
-    public static byte[] getMediaRequestMessage(byte imgID, byte packetNumber){
-        byte[] message = new byte[4];
+    public static byte[] getMediaRequestMessage(byte imgID, int packetNumber){
+        byte[] message = new byte[3 + 4];
         message[0] = MEDIA_REQUEST;
         message[1] = MEDIA_RESPONSE;
         message[2] = imgID;
-        message[3] = packetNumber;
+        byte[] packetNum = ByteBuffer.allocate(4).putInt(packetNumber).array();
+        System.arraycopy(packetNum, 0, message, 3, 4);
         return message;
     }
 
@@ -114,9 +115,9 @@ public class MessageUtility {
             res.imgID = msg[2];
 
             // Extract packet number
-            res.packetCount = msg[3];
+            res.packetCount = ByteBuffer.wrap(msg, 3, 4).getInt();
 
-            res.imgLength = ByteBuffer.wrap(msg, 4, 4).getInt();
+            res.imgLength = ByteBuffer.wrap(msg, 7, 4).getInt();
 
             Log.d(TAG, "ID: " + res.imgID + "COUNT: " + res.packetCount + "SIZE: " + res.imgLength);
             return true;
@@ -134,13 +135,13 @@ public class MessageUtility {
             byte imgID = msg[2];
 
             // Extract packet number
-            byte packetNumber = msg[3];
+            int packetNumber = ByteBuffer.wrap(msg, 3, 4).getInt();
 
             if(media.getImgID() == imgID && media.getExpectingPacketNumber() == packetNumber){
-                int payloadLength = ByteBuffer.wrap(msg,4,4).getInt();
+                int payloadLength = ByteBuffer.wrap(msg,7,4).getInt();
                 Log.d(TAG, "Payload Len = " + payloadLength);
                 byte[] payload = new byte[payloadLength];
-                System.arraycopy(msg,7,payload,0,payloadLength);
+                System.arraycopy(msg,11,payload,0,payloadLength);
                 media.appendData(payload);
             }
             return true;
