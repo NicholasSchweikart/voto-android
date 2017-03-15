@@ -2,6 +2,7 @@ package edu.mtu.cs3421.voto;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.os.Vibrator;
 import android.support.v4.app.NavUtils;
 import android.support.v4.view.GestureDetectorCompat;
@@ -27,18 +28,20 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     private FABProgressCircle aBtn, bBtn, cBtn, dBtn;
     private View controlsOverlay;
     private ImageView slidesImageView;
+    private Media media;
     GestureDetectorCompat mDetector;
     Vibrator vibrator;
 
     // System Control Vars
     private byte voteID;
     private String ID;
+    private boolean VOTING_LOCKED;
     private FABProgressCircle pendingVoteButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+        Log.d(TAG, "Starting Live Activity");
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -56,15 +59,20 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
         // Init vote number to 0;
         voteID = 0;
-        if(ipAddressString.equals("null")){
 
-            // Create the UDPclient that will handle this entire session.
-            // The result will come back through the interface.
-            UDPclient udp = new UDPclient(ActiveSessionActivity.this,ipAddressString);
-            if(!udp.isServiceReady()) {
-                Toast.makeText(ActiveSessionActivity.this,"Invalid IP",Toast.LENGTH_SHORT).show();
-            }
+        // Create the UDPclient that will handle this entire session.
+        // The result will come back through the interface.
+        UDPclient udpClient = new UDPclient(ActiveSessionActivity.this,ipAddressString);
+        if(!udpClient.isServiceReady()) {
+            Toast.makeText(ActiveSessionActivity.this,"Invalid IP",Toast.LENGTH_SHORT).show();
+            finish();
         }
+        udpClient.setMyID(null);
+        // Lock down the voting interface untill we have the slide loaded.
+        VOTING_LOCKED = false;
+
+        // Start Media polling, this never stops untill the session is over...
+        udpClient.pollNewMedia();
 
         // Put the session id stuff up in the title bar
         getSupportActionBar().setTitle("Host@" + ipAddressString );
@@ -97,6 +105,20 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     }
 
+    @Override
+    public void onMediaAvailable(Media mediaNew) {
+        media = mediaNew;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //update the background slide
+                slidesImageView.setImageBitmap(media.getBitMap());
+
+                // TODO unlock voting interface
+            }
+        });
+    }
+
     View.OnClickListener voteButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -125,7 +147,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                     vote = "D";
                     break;
             }
-            UDPclient.sendVote(ID,vote,voteID);            // Send of the new vote
+            UDPclient.sendVote(vote,voteID);            // Send of the new vote
         }
     };
 
@@ -154,7 +176,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         return super.onTouchEvent(event);
     }
 
-    class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+    private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final String DEBUG_TAG = "Gestures";
 
         @Override
@@ -171,7 +193,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
             controlsOverlay.setVisibility(View.INVISIBLE);
             return true;
         }
-    };
+    }
 
     @Override
     public void onHandshakeFailure() {
@@ -182,4 +204,5 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     public void onHandshakeResponse(String reply) {
         // Ignore
     }
+
 }

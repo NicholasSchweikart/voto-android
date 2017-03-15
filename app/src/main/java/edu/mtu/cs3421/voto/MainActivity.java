@@ -1,6 +1,7 @@
 package edu.mtu.cs3421.voto;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -42,7 +43,8 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
                 // The result will come back through the interface.
                 UDPclient udp = new UDPclient(MainActivity.this,ipAddress);
                 if(udp.isServiceReady()) {
-                    udp.sendHandshake(id);
+                    udp.setMyID(null);
+                    udp.sendHandshake();
                 }else{
                     Toast.makeText(MainActivity.this,"Invalid IP",Toast.LENGTH_SHORT).show();
                 }
@@ -122,4 +124,10 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
             startSession();
         }
     }
+
+    @Override
+    public void onMediaAvailable(Media media) {
+
+    }
+
 }

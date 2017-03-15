@@ -1,8 +1,6 @@
 package edu.mtu.cs3421.voto;
 
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import java.io.IOException;
@@ -16,12 +14,7 @@ import java.net.*;
 
 public class UDPclient {
 
-    public static final String TAG = "UDP-Service";
-
-    // Message Headers
-    private static final String
-            VOTE_HEADER = "vote_",
-            HANDSHAKE_HEADER = "handshakeRequest_";
+    private static final String TAG = "UDP-Service";
 
     // Message Type Values
     private static final int
@@ -36,7 +29,7 @@ public class UDPclient {
     private InetAddress HOST_INET_ADDRESS;
     private boolean serviceReady;
     private BitmapFactory bitmapFactory;
-    private final String ID = ""; //TODO get ID from prefercences
+    private String myID = ""; //TODO get myID from prefercences
 
     UDPclient(UDPServiceListener listener, String HOST_IP_STRING) {
         Log.d(TAG, "Opening a UDP socket");
@@ -45,13 +38,21 @@ public class UDPclient {
         try {
             HOST_INET_ADDRESS = InetAddress.getByName(HOST_IP_STRING);
             datagramSocket = new DatagramSocket();
-            datagramSocket.setSoTimeout(100);
-            Log.d(TAG, "IP: " + datagramSocket.getInetAddress() + "PORT:" + datagramSocket.getPort());
+            datagramSocket.setSoTimeout(500);
+            Log.d(TAG, "IP: " + datagramSocket.getLocalAddress().toString() + "PORT:" + datagramSocket.getPort());
             serviceReady = true;
         } catch (Exception e) {
             Log.e(TAG, "Error could not build new datagram socket!");
             serviceReady = false;
+            e.printStackTrace();
         }
+    }
+
+    public void setMyID(String id){
+        if(id == null)
+            myID = datagramSocket.getLocalAddress().toString();
+        else
+            myID = id;
     }
 
     public interface UDPServiceListener {
@@ -59,20 +60,25 @@ public class UDPclient {
         void onVoteFailure(int vote_id);
         void onHandshakeFailure();
         void onHandshakeResponse(String reply);
+        void onMediaAvailable(Media media);
     }
 
     public boolean isServiceReady() {
         return serviceReady;
     }
 
-    public void sendVote(String id,String vote, byte voteNumber) {
-        new send(MessageUtility.getVoteMessage(id,vote,voteNumber), MESSAGE_TYPE_VOTE, voteNumber).start();
+    public void sendVote(String vote, byte voteNumber) {
+        new send(MessageUtility.getVoteMessage(myID,vote,voteNumber), MESSAGE_TYPE_VOTE, voteNumber).start();
     }
 
-    public void sendHandshake(String id) {
-        new send(MessageUtility.getHandshakeRequestMessage(id), MESSAGE_TYPE_HANDSHAKE, 0).start();
+    public void sendHandshake() {
+
+        new send(MessageUtility.getHandshakeRequestMessage(myID), MESSAGE_TYPE_HANDSHAKE, 0).start();
     }
 
+    public void pollNewMedia(){
+        new MediaLoader().start();
+    }
     private class send extends Thread {
 
         private byte[] message;
@@ -92,18 +98,15 @@ public class UDPclient {
 
             DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
 
-            boolean waitingReply = true;
-
-            while (waitingReply) {
+            while (true) {
                 try {
                     datagramSocket.send(packet);
                     DatagramPacket rp = new DatagramPacket(buffer, buffer.length);
                     datagramSocket.receive(rp);
 
-                    waitingReply = false;
-
                     Log.d(TAG, "Send Successful");
                     messageSendSuccessful(new String(rp.getData()).trim());
+                    return;
 
                 } catch (SocketTimeoutException e) {
 
@@ -146,53 +149,96 @@ public class UDPclient {
         }
     }
 
-    private class loadSlide extends Thread{
-
-        byte[] slideBuffer; byte[] rpBuffer = new byte[SLIDE_PACKET_MAX_SIZE];
-        int slideLength;
-
-        loadSlide(){
-
+    private class MediaLoader extends Thread{
+        byte[] rpBuffer = new byte[SLIDE_PACKET_MAX_SIZE];
+        Media media;
+        MediaLoader(){
         }
         @Override
         public void run() {
-            Log.d(TAG, "Retrieving slide data");
-            byte[] message = "GET>>".getBytes();
-            DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
+            Log.d(TAG, "Pinging for new slide");
 
-            boolean notFinished = true;
-            while(notFinished){
+            // Get the initial media ping message.
+            byte[] msgOut = MessageUtility.getMediaPingMessage();
+            DatagramPacket packet = new DatagramPacket(msgOut, msgOut.length, HOST_INET_ADDRESS, HOST_PORT);
+
+            while(true){
+
                 try {
+                    // Sleep and retry again in 1 second.
+                    sleep(1000);
+
                     datagramSocket.send(packet);
                     DatagramPacket rp = new DatagramPacket(rpBuffer, rpBuffer.length);
                     datagramSocket.receive(rp);
-                    proccessMessage(rpBuffer);
 
+                    MediaResponse res = new MediaResponse();
+                    MessageUtility.parseMediaPing(rp.getData(),res);
+
+                    // Only update system if this is a new image
+                    if(media == null || (media.getImgID() != res.imgID)){
+
+                        media = new Media(res.imgID, res.packetCount, res.imgLength);
+
+                        // Blocks until entire slide is loaded, then alerts the UI
+                        loadMedia();
+                        listener.onMediaAvailable(media);
+                    }
+
+                } catch (SocketTimeoutException e) {
+                    Log.d(TAG, "Timeout Reached on media ping");
+
+                } catch (IOException e) {
+                    Log.e(TAG, "IO Error on send");
+                    return;
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "SLEEP ISSUE MEDIA PINGER");
+                }
+            }
+        }
+
+        private boolean loadMedia(){
+            while (true) {
+                try {
+
+                    // Get the mediaRequestMessage.
+                    byte[] msgOut = MessageUtility.getMediaRequestMessage(media.getImgID(),media.getExpectingPacketNumber());
+
+                    // Build and send the packet.
+                    DatagramPacket packet = new DatagramPacket(msgOut, msgOut.length, HOST_INET_ADDRESS, HOST_PORT);
+                    datagramSocket.send(packet);
+
+                    // Wait for the data to come back.
+                    DatagramPacket rp = new DatagramPacket(rpBuffer, rpBuffer.length);
+                    datagramSocket.receive(rp);
+                    byte[] msgIn = rp.getData();
+
+                    // Process the message
+                    if(! MessageUtility.parseMediaResponse(msgIn,media) ){
+                        Log.e(TAG, "Error wrong headers media request response");
+                        return false;
+                    }
+
+                    if(media.isReady()){
+                        return true;
+                    }
                 } catch (SocketTimeoutException e) {
                     Log.d(TAG, "Timeout Reached, resending...");
 
                 } catch (IOException e) {
                     Log.e(TAG, "IO Error on send");
-                    return;
+                    return false;
                 }
             }
         }
+    }
+//
+    class MediaResponse{
+        int imgLength;
+        byte imgID;
+        byte packetCount;
+        MediaResponse(){
 
-        private void proccessMessage(byte[] message){
-
-            // Process based on message header fields.
-            switch(message[1]){
-
-                // Data packet containing more image bytes
-                case 'D':
-
-                    break;
-
-                // Start packet describing the entire slide
-                case 'S':
-
-                    break;
-            }
         }
     }
 }

@@ -1,5 +1,7 @@
 package edu.mtu.cs3421.voto;
 
+import android.util.Log;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -7,11 +9,11 @@ import java.nio.ByteBuffer;
  */
 
 public class MessageUtility {
-
+    private static final String TAG = "message-util";
     public static final byte
             HANDSHAKE_REQUEST   = (byte) 'R',
             VOTE_REQUEST        = (byte) 'V',
-            VOTE_RESPONSE        = (byte) 'R',
+            VOTE_RESPONSE       = (byte) 'R',
             MEDIA_REQUEST       = (byte) 'M',
             MEDIA_PING          = (byte) 'P',
             MEDIA_RESPONSE      = (byte) 'R';
@@ -103,6 +105,26 @@ public class MessageUtility {
         return voteID;
     }
 
+    public static boolean parseMediaPing(byte[] msg, UDPclient.MediaResponse res){
+
+        // Check for proper message headers
+        if(msg[0] == MEDIA_REQUEST && msg[1] == MEDIA_PING ){
+
+            // Extract image ID
+            res.imgID = msg[2];
+
+            // Extract packet number
+            res.packetCount = msg[3];
+
+            res.imgLength = ByteBuffer.wrap(msg, 4, 4).getInt();
+
+            Log.d(TAG, "ID: " + res.imgID + "COUNT: " + res.packetCount + "SIZE: " + res.imgLength);
+            return true;
+        }
+
+        return false;
+    }
+
     public static boolean parseMediaResponse(byte[] msg, Media media){
 
         // Check for proper message headers
@@ -114,9 +136,9 @@ public class MessageUtility {
             // Extract packet number
             byte packetNumber = msg[3];
 
-            if(media.imgID == imgID && media.expectingPacketNumber == packetNumber){
+            if(media.getImgID() == imgID && media.getExpectingPacketNumber() == packetNumber){
                 int payloadLength = ByteBuffer.wrap(msg,4,4).getInt();
-
+                Log.d(TAG, "Payload Len = " + payloadLength);
                 byte[] payload = new byte[payloadLength];
                 System.arraycopy(msg,7,payload,0,payloadLength);
                 media.appendData(payload);
@@ -127,38 +149,5 @@ public class MessageUtility {
         return false;
     }
 
-    public class Media{
-
-        byte imgID, totalPackets, expectingPacketNumber;
-        byte[] imgBuffer;
-        int imgSize, cursor;
-        boolean ready = false;
-
-        Media(byte imgID, byte totalPackets, byte imgLength){
-            this.imgID = imgID;
-            this.totalPackets = totalPackets;
-            this.imgSize = imgLength;
-            imgBuffer = new byte[imgLength];
-            expectingPacketNumber = 1;
-            cursor = 0;
-        }
-
-        public void appendData(byte[] data){
-
-            // Copy in the data
-            System.arraycopy(data,0,imgBuffer,cursor,data.length);
-
-            // Increment the position cursor and the expected packet.
-            cursor += data.length;
-            expectingPacketNumber += 1;
-
-            // Flag Media ready if we have gotten all the packets.
-            if(expectingPacketNumber > totalPackets){
-                ready = true;
-            }
-        }
-
-
-    }
 
 }
