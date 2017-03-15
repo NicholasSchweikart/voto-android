@@ -1,7 +1,6 @@
 package edu.mtu.cs3421.voto;
 
 import android.graphics.BitmapFactory;
-import android.provider.ContactsContract;
 import android.util.Log;
 
 import java.io.IOException;
@@ -23,8 +22,9 @@ public class UDPclient {
     private final int HOST_PORT;
     private InetAddress HOST_INET_ADDRESS;
     private boolean serviceReady;
-    private BitmapFactory bitmapFactory;
     private String myID = ""; //TODO get myID from prefercences
+
+    private DatagramSocket socketOne, socketTwo;
 
     UDPclient(UDPServiceListener listener, String HOST_IP_STRING) {
         Log.d(TAG, "Opening a UDP socket");
@@ -74,8 +74,7 @@ public class UDPclient {
     private class Handshake extends Thread {
         private final int timeout = 500;
         private byte[] message;
-        byte[] buffer = new byte[512];
-        private DatagramSocket datagramSocket;
+
         Handshake() {
 
         }
@@ -84,8 +83,8 @@ public class UDPclient {
         public void run() {
             Log.d(TAG, "Attempting Handshake...");
 
-            datagramSocket = getDatagramSocket();
-            if(datagramSocket == null){
+            socketOne = getDatagramSocket();
+            if(socketOne == null){
                 Log.e(TAG, "Hanshake Failure bad socket");
                 listener.onHandshakeFailure();
                 return;
@@ -95,7 +94,7 @@ public class UDPclient {
 
             DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
 
-            byte[] res = sendMessage(packet,datagramSocket, 512, timeout);
+            byte[] res = sendMessage(packet, socketOne, 512, timeout);
 
             if(res == null){
                 Log.e(TAG, "Hanshake Failure");
@@ -113,7 +112,6 @@ public class UDPclient {
         private byte[] message;
         private final String vote;
         private final byte voteNumber;
-        private DatagramSocket datagramSocket;
 
         Voter(String vote, byte voteNumber) {
             this.vote = vote;
@@ -124,8 +122,7 @@ public class UDPclient {
         public void run() {
             Log.d(TAG, "Attempting Vote...");
 
-            datagramSocket = getDatagramSocket();
-            if(datagramSocket == null){
+            if(socketOne == null){
                 Log.e(TAG, "Vote Failure bad socket");
                 listener.onVoteFailure(voteNumber);
                 return;
@@ -135,7 +132,7 @@ public class UDPclient {
 
             DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
 
-            byte[] res = sendMessage(packet,datagramSocket, 512, timeout);
+            byte[] res = sendMessage(packet,socketOne, 512, timeout);
 
             if(res == null){
                 Log.e(TAG, "Vote Failure");
@@ -152,7 +149,6 @@ public class UDPclient {
     private class MediaLoader extends Thread{
         private final int timeout = 500;
         Media media;
-        private DatagramSocket datagramSocket;
 
         MediaLoader(){
 
@@ -161,8 +157,8 @@ public class UDPclient {
         public void run() {
             Log.d(TAG, "Pinging for new slide...");
 
-            datagramSocket = getDatagramSocket();
-            if(datagramSocket == null){
+            socketTwo = getDatagramSocket();
+            if(socketTwo == null){
                 Log.e(TAG, "Ping Failure bad socket");
                 return;
             }
@@ -173,7 +169,7 @@ public class UDPclient {
 
             while(true){
 
-                byte[] res = sendMessage(packet, datagramSocket,512,timeout);
+                byte[] res = sendMessage(packet, socketTwo,512,timeout);
 
                 if(res == null){
                     Log.e(TAG, "Failed to ping for new media");
@@ -198,7 +194,7 @@ public class UDPclient {
 
                 }else{
                     try {
-                        sleep(2000);
+                        sleep(1000);
                     } catch (InterruptedException e) {
                         Log.e(TAG,"Failed to sleep");
                     }
@@ -215,7 +211,7 @@ public class UDPclient {
 
                 // Build and send the packet.
                 DatagramPacket packet = new DatagramPacket(msgOut, msgOut.length, HOST_INET_ADDRESS, HOST_PORT);
-                byte[] msgIn = sendMessage(packet,datagramSocket,SLIDE_PACKET_MAX_SIZE,timeout);
+                byte[] msgIn = sendMessage(packet,socketTwo,SLIDE_PACKET_MAX_SIZE,timeout);
 
                 if(msgIn == null)
                     return false;
