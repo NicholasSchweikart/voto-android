@@ -16,11 +16,6 @@ public class UDPclient {
 
     private static final String TAG = "UDP-Service";
 
-    // Message Type Values
-    private static final int
-            MESSAGE_TYPE_HANDSHAKE = 1,
-            MESSAGE_TYPE_VOTE = 2;
-
     private static final int SLIDE_PACKET_MAX_SIZE = 71680;
 
     private final UDPServiceListener listener;
@@ -38,8 +33,7 @@ public class UDPclient {
         try {
             HOST_INET_ADDRESS = InetAddress.getByName(HOST_IP_STRING);
             datagramSocket = new DatagramSocket();
-            datagramSocket.setSoTimeout(500);
-            Log.d(TAG, "IP: " + datagramSocket.getLocalAddress().toString() + "PORT:" + datagramSocket.getPort());
+            Log.d(TAG, "IP: " + datagramSocket.getLocalAddress().toString() + "PORT: " + datagramSocket.getPort());
             serviceReady = true;
         } catch (Exception e) {
             Log.e(TAG, "Error could not build new datagram socket!");
@@ -68,171 +62,186 @@ public class UDPclient {
     }
 
     public void sendVote(String vote, byte voteNumber) {
-        new send(MessageUtility.getVoteMessage(myID,vote,voteNumber), MESSAGE_TYPE_VOTE, voteNumber).start();
+        new Voter(vote,voteNumber).start();
     }
 
     public void sendHandshake() {
 
-        new send(MessageUtility.getHandshakeRequestMessage(myID), MESSAGE_TYPE_HANDSHAKE, 0).start();
+        new Handshake().start();
     }
 
     public void pollNewMedia(){
         new MediaLoader().start();
     }
-    private class send extends Thread {
 
+    private class Handshake extends Thread {
+        private final int timeout = 500;
         private byte[] message;
         byte[] buffer = new byte[512];
-        private final int TYPE, voteID;
 
-        send(byte[] message, int TYPE, int voteID) {
-            this.message = message;
-            this.TYPE = TYPE;
-            this.voteID = voteID;
+        Handshake() {
+
         }
 
         @Override
         public void run() {
-            Log.d(TAG, "Sending Message");
-            int attempts = 0;
+            Log.d(TAG, "Attempting Handshake...");
+
+            message = MessageUtility.getHandshakeRequestMessage(myID);
 
             DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
 
-            while (true) {
-                try {
-                    datagramSocket.send(packet);
-                    DatagramPacket rp = new DatagramPacket(buffer, buffer.length);
-                    datagramSocket.receive(rp);
+            byte[] res = sendMessage(packet,datagramSocket, 512, timeout);
 
-                    Log.d(TAG, "Send Successful");
-                    messageSendSuccessful(new String(rp.getData()).trim());
-                    return;
-
-                } catch (SocketTimeoutException e) {
-
-                    Log.d(TAG, "Timeout Reached, resending...");
-                    if (attempts == 6) {
-                        Log.e(TAG, "Error to many attempts with no response!");
-                        messageFailureAlert();
-                        return;
-                    }
-                    attempts += 1;
-
-                } catch (IOException e) {
-                    Log.e(TAG, "IO Error on send");
-                    messageFailureAlert();
-                    return;
-                }
+            if(res == null){
+                Log.e(TAG, "Hanshake Failure");
+                listener.onHandshakeFailure();
             }
+            else{
+                listener.onHandshakeResponse(new String(res).trim());
+            }
+
+        }
+    }
+
+    private class Voter extends Thread {
+        private final int timeout = 500;
+        private byte[] message;
+        byte[] buffer = new byte[512];
+        private final String vote;
+        private final byte voteNumber;
+
+        Voter(String vote, byte voteNumber) {
+            this.vote = vote;
+            this.voteNumber = voteNumber;
         }
 
-        private void messageFailureAlert(){
-            switch (TYPE) {
-                case MESSAGE_TYPE_HANDSHAKE:
-                    listener.onHandshakeFailure();
-                    break;
-                case MESSAGE_TYPE_VOTE:
-                    listener.onVoteFailure(voteID);
-                    break;
-            }
-        }
+        @Override
+        public void run() {
+            Log.d(TAG, "Attempting Vote...");
 
-        private void messageSendSuccessful(String response){
-            switch (TYPE) {
-                case MESSAGE_TYPE_HANDSHAKE:
-                    listener.onHandshakeResponse(response);
-                    break;
-                case MESSAGE_TYPE_VOTE:
-                    listener.onVoteSuccess(voteID);
-                    break;
+            message = MessageUtility.getVoteMessage(myID,vote,voteNumber);
+
+            DatagramPacket packet = new DatagramPacket(message, message.length, HOST_INET_ADDRESS, HOST_PORT);
+
+            byte[] res = sendMessage(packet,datagramSocket, 512, timeout);
+
+            if(res == null){
+                Log.e(TAG, "Vote Failure");
+                listener.onVoteFailure(voteNumber);
             }
+            else{
+                Log.d(TAG, "Vote Success");
+                listener.onVoteSuccess(voteNumber);
+            }
+
         }
     }
 
     private class MediaLoader extends Thread{
-        byte[] rpBuffer = new byte[SLIDE_PACKET_MAX_SIZE];
+        private final int timeout = 500;
         Media media;
         MediaLoader(){
+
         }
         @Override
         public void run() {
-            Log.d(TAG, "Pinging for new slide");
+            Log.d(TAG, "Pinging for new slide...");
 
             // Get the initial media ping message.
-            byte[] msgOut = MessageUtility.getMediaPingMessage();
-            DatagramPacket packet = new DatagramPacket(msgOut, msgOut.length, HOST_INET_ADDRESS, HOST_PORT);
+            byte[] mediaPingMessage = MessageUtility.getMediaPingMessage();
+            DatagramPacket packet = new DatagramPacket(mediaPingMessage, mediaPingMessage.length, HOST_INET_ADDRESS, HOST_PORT);
 
             while(true){
 
-                try {
-                    // Sleep and retry again in 1 second.
-                    sleep(1000);
+                byte[] res = sendMessage(packet, datagramSocket,512,timeout);
 
-                    datagramSocket.send(packet);
-                    DatagramPacket rp = new DatagramPacket(rpBuffer, rpBuffer.length);
-                    datagramSocket.receive(rp);
+                if(res == null){
+                    Log.e(TAG, "Failed to ping for new media");
+                    return;
+                }
 
-                    MediaResponse res = new MediaResponse();
-                    MessageUtility.parseMediaPing(rp.getData(),res);
+                MediaResponse response = new MediaResponse();
+                MessageUtility.parseMediaPing(res,response);
 
-                    // Only update system if this is a new image
-                    if(media == null || (media.getImgID() != res.imgID)){
+                // Only update system if this is a new image
+                if(media == null || (media.getImgID() != response.imgID)){
+                    Log.d(TAG, "-- New Media Available --");
+                    media = new Media(response.imgID, response.packetCount, response.imgLength);
 
-                        media = new Media(res.imgID, res.packetCount, res.imgLength);
-
-                        // Blocks until entire slide is loaded, then alerts the UI
-                        loadMedia();
+                    // Blocks until entire slide is loaded, then alerts the UI
+                    if(!loadMedia()){
+                        Log.e(TAG, "Failed to load media");
+                        media = null;
+                    }else{
                         listener.onMediaAvailable(media);
                     }
 
-                } catch (SocketTimeoutException e) {
-                    Log.d(TAG, "Timeout Reached on media ping");
-
-                } catch (IOException e) {
-                    Log.e(TAG, "IO Error on send");
-                    return;
-                } catch (InterruptedException e) {
-                    Log.e(TAG, "SLEEP ISSUE MEDIA PINGER");
+                }else{
+                    try {
+                        sleep(2000);
+                    } catch (InterruptedException e) {
+                        Log.e(TAG,"Failed to sleep");
+                    }
                 }
+
             }
         }
 
         private boolean loadMedia(){
             while (true) {
-                try {
 
-                    // Get the mediaRequestMessage.
-                    byte[] msgOut = MessageUtility.getMediaRequestMessage(media.getImgID(),media.getExpectingPacketNumber());
+                // Get the mediaRequestMessage.
+                byte[] msgOut = MessageUtility.getMediaRequestMessage(media.getImgID(),media.getExpectingPacketNumber());
 
-                    // Build and send the packet.
-                    DatagramPacket packet = new DatagramPacket(msgOut, msgOut.length, HOST_INET_ADDRESS, HOST_PORT);
-                    datagramSocket.send(packet);
+                // Build and send the packet.
+                DatagramPacket packet = new DatagramPacket(msgOut, msgOut.length, HOST_INET_ADDRESS, HOST_PORT);
+                byte[] msgIn = sendMessage(packet,datagramSocket,SLIDE_PACKET_MAX_SIZE,timeout);
 
-                    // Wait for the data to come back.
-                    DatagramPacket rp = new DatagramPacket(rpBuffer, rpBuffer.length);
-                    datagramSocket.receive(rp);
-                    byte[] msgIn = rp.getData();
-
-                    // Process the message
-                    if(! MessageUtility.parseMediaResponse(msgIn,media) ){
-                        Log.e(TAG, "Error wrong headers media request response");
-                        return false;
-                    }
-
-                    if(media.isReady()){
-                        return true;
-                    }
-                } catch (SocketTimeoutException e) {
-                    Log.d(TAG, "Timeout Reached, resending...");
-
-                } catch (IOException e) {
-                    Log.e(TAG, "IO Error on send");
+                if(msgIn == null)
                     return false;
+
+                // Process the message
+                if(! MessageUtility.parseMediaResponse(msgIn,media) ){
+                    Log.e(TAG, "Error wrong headers media request response");
                 }
+
+                if(media.isReady()){
+                    return true;
+                }
+
             }
         }
     }
-//
+    private byte[] sendMessage(DatagramPacket packet, DatagramSocket socket, int bufferSize, int timeout){
+        int attempts = 0;
+        byte[] buffer = new byte[bufferSize];
+        while (true) {
+            try {
+                datagramSocket.setSoTimeout(timeout);
+                socket.send(packet);
+                DatagramPacket rp = new DatagramPacket(buffer, buffer.length);
+                socket.receive(rp);
+
+                Log.d(TAG, "Send Successful");
+                return rp.getData();
+
+            } catch (SocketTimeoutException e) {
+
+                Log.d(TAG, "Timeout Reached, resending...");
+                if (attempts == 6) {
+                    Log.e(TAG, "Error to many attempts with no response!");
+                    return null;
+                }
+                attempts += 1;
+
+            } catch (IOException e) {
+                Log.e(TAG, "IO Error on send");
+                return null;
+            }
+        }
+    }
+
     class MediaResponse{
         int imgLength;
         byte imgID;
