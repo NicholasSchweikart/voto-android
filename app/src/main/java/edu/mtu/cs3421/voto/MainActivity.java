@@ -1,6 +1,7 @@
 package edu.mtu.cs3421.voto;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -33,20 +34,19 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         Button hostButton = (Button)findViewById(R.id.hostButton);
 
         addressEditText = (EditText)findViewById(R.id.ipEditText);
-
+        final String id = null; //TODO load in real ID.
         joinButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ipAddress = addressEditText.getText().toString();
 
                 // The result will come back through the interface.
-                UDPclient udp = null;
-                try {
-                    udp = new UDPclient(MainActivity.this,ipAddress);
+                UDPclient udp = new UDPclient(MainActivity.this,ipAddress);
+                if(udp.isServiceReady()) {
+                    udp.setMyID(null);
                     udp.sendHandshake();
-                }catch (UnknownHostException e) {
-                    Log.e(TAG, "Unknown Host Exception");
-                    Toast.makeText(MainActivity.this,"Invalid IP", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(MainActivity.this,"Invalid IP",Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -108,10 +108,26 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
     }
 
     @Override
+    public void onVoteFailure(int vote_id) {
+
+    }
+
+    @Override
+    public void onHandshakeFailure() {
+
+    }
+
+    @Override
     public void onHandshakeResponse(String reply) {
         if (!reply.startsWith("ERROR")) {
             Log.d(TAG, "Handshake Recieved");
             startSession();
         }
     }
+
+    @Override
+    public void onMediaAvailable(Media media) {
+
+    }
+
 }
