@@ -2,7 +2,7 @@ package edu.mtu.cs3421.voto;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
+import android.net.wifi.WifiManager;
 import android.os.Vibrator;
 import android.support.v4.app.NavUtils;
 import android.support.v4.view.GestureDetectorCompat;
@@ -22,13 +22,19 @@ import android.widget.Toast;
 
 import com.github.jorgecastilloprz.FABProgressCircle;
 
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteOrder;
+
 public class ActiveSessionActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     private static final String TAG = "Active-Session";
-    private UDPclient UDPclient;
-    private FABProgressCircle aBtn, bBtn, cBtn, dBtn;
+
+    private FABProgressCircle aBtn, bBtn, cBtn, dBtn, pendingVoteButton;
     private View controlsOverlay;
     private ImageView slidesImageView;
     private Media media;
+    private UDPclient udpClient;
     GestureDetectorCompat mDetector;
     Vibrator vibrator;
 
@@ -36,12 +42,13 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     private byte voteID;
     private String ID;
     private boolean VOTING_LOCKED;
-    private FABProgressCircle pendingVoteButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Log.d(TAG, "Starting Live Activity");
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -55,27 +62,20 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         slidesImageView = (ImageView)findViewById(R.id.slideImageView);
 
         // Retrieve the HOST ip address from the intent.
-        String ipAddressString = getIntent().getStringExtra("IP_ADDRESS_STRING");
+        String hostIpAddressString = getIntent().getStringExtra("IP_ADDRESS_STRING");
 
         // Init vote number to 0;
         voteID = 0;
 
         // Create the UDPclient that will handle this entire session.
         // The result will come back through the interface.
-        UDPclient udpClient = new UDPclient(ActiveSessionActivity.this,ipAddressString);
-        if(!udpClient.isServiceReady()) {
-            Toast.makeText(ActiveSessionActivity.this,"Invalid IP",Toast.LENGTH_SHORT).show();
-            finish();
-        }
-        udpClient.setMyID(null);
-        // Lock down the voting interface untill we have the slide loaded.
+        udpClient = new UDPclient(ActiveSessionActivity.this, hostIpAddressString, wifiIpAddress());
+
+        // Lock down the voting interface until we have the slide loaded.
         VOTING_LOCKED = false;
 
-        // Start Media polling, this never stops untill the session is over...
-        udpClient.pollNewMedia();
-
         // Put the session id stuff up in the title bar
-        getSupportActionBar().setTitle("Host@" + ipAddressString );
+        getSupportActionBar().setTitle("Host@" + hostIpAddressString );
         vibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
         controlsOverlay = (View)findViewById(R.id.controlsOverlay);
 
@@ -87,21 +87,27 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     }
 
     @Override
-    public void onVoteSuccess(int vote_id) {
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy()");
 
-        if(vote_id == voteID){
-            pendingVoteButton.hide();   // Clear the loader
-            Toast.makeText(this,"Vote Sent!",Toast.LENGTH_SHORT).show();
+        if(udpClient != null){
+            udpClient.stop();
+
         }
     }
 
     @Override
-    public void onVoteFailure(int vote_id) {
+    public void onVoteSuccess(int vote_id) {
 
-        // Check if we care about this failure
         if(vote_id == voteID){
-            pendingVoteButton.hide();   // Clear the loader
-            Toast.makeText(this,"Vote Failed!",Toast.LENGTH_SHORT).show();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    pendingVoteButton.hide();   // Clear the loader
+                    Toast.makeText(getApplicationContext(),"Vote Sent!",Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 
@@ -117,6 +123,33 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                 // TODO unlock voting interface
             }
         });
+    }
+
+    @Override
+    public void onReady() {
+
+        // Start Media polling, this never stops until the session is over...
+        udpClient.pollNewMedia();
+    }
+
+    @Override
+    public void onFailure(int failureCode, Object obj) {
+
+        switch (failureCode){
+            case UDPclient.MEDIA_FAILURE:
+
+                break;
+            case UDPclient.VOTE_FAILURE:
+
+                // Check if we care about this failure
+                if((int)obj == voteID){
+                    pendingVoteButton.hide();   // Clear the loader
+                    Toast.makeText(this,"Vote Failed!",Toast.LENGTH_SHORT).show();
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     View.OnClickListener voteButtonListener = new View.OnClickListener() {
@@ -147,7 +180,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                     vote = "D";
                     break;
             }
-            UDPclient.sendVote(vote,voteID);            // Send of the new vote
+            udpClient.sendVote(vote,voteID);            // Send of the new vote
         }
     };
 
@@ -183,8 +216,10 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         public void onLongPress(MotionEvent e) {
             super.onLongPress(e);
             Log.d(TAG, "Long Press");
-            controlsOverlay.setVisibility(View.VISIBLE);
 
+            if(!VOTING_LOCKED){
+                controlsOverlay.setVisibility(View.VISIBLE);
+            }
         }
 
         @Override
@@ -196,13 +231,29 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     }
 
     @Override
-    public void onHandshakeFailure() {
-        // Ignore
-    }
-
-    @Override
     public void onHandshakeResponse(String reply) {
         // Ignore
     }
 
+    private String wifiIpAddress() {
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+
+        // Convert little-endian to big-endianif needed
+        if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+            ipAddress = Integer.reverseBytes(ipAddress);
+        }
+
+        byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
+
+        String ipAddressString;
+        try {
+            ipAddressString = InetAddress.getByAddress(ipByteArray).getHostAddress();
+        } catch (UnknownHostException ex) {
+            Log.e("WIFI-IP", "Unable to get host address.");
+            ipAddressString = null;
+        }
+
+        return ipAddressString;
+    }
 }
