@@ -1,9 +1,11 @@
 package edu.mtu.cs3421.voto;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.net.wifi.WifiManager;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -40,7 +42,6 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
     // System Control Vars
     private byte voteID;
-    private String ID;
     private boolean VOTING_LOCKED;
 
     @Override
@@ -67,12 +68,21 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         // Init vote number to 0;
         voteID = 0;
 
+        String id;
+        SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String specialID = SP.getString("special_id", "NA");
+        if(specialID.equals("NA")){
+            id = wifiIpAddress();
+        }else{
+            id = specialID;
+        }
+
         // Create the UDPclient that will handle this entire session.
         // The result will come back through the interface.
-        udpClient = new UDPclient(ActiveSessionActivity.this, hostIpAddressString, wifiIpAddress());
+        udpClient = new UDPclient(ActiveSessionActivity.this, hostIpAddressString, id);
 
         // Lock down the voting interface until we have the slide loaded.
-        VOTING_LOCKED = false;
+        VOTING_LOCKED = true;
 
         // Put the session id stuff up in the title bar
         getSupportActionBar().setTitle("Host@" + hostIpAddressString );
@@ -82,6 +92,15 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         // Initialize all the voting buttons
         aBtn = (FABProgressCircle)findViewById(R.id.aButton);
         aBtn.setOnClickListener(voteButtonListener);
+
+        bBtn = (FABProgressCircle)findViewById(R.id.bButton);
+        bBtn.setOnClickListener(voteButtonListener);
+
+        cBtn = (FABProgressCircle)findViewById(R.id.cButton);
+        cBtn.setOnClickListener(voteButtonListener);
+
+        dBtn = (FABProgressCircle)findViewById(R.id.dButton);
+        dBtn.setOnClickListener(voteButtonListener);
 
         mDetector = new GestureDetectorCompat(this, new MyGestureListener());
     }
@@ -99,7 +118,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
     @Override
     public void onVoteSuccess(int vote_id) {
-
+        Log.d(TAG, "Vote Successful!");
         if(vote_id == voteID){
             runOnUiThread(new Runnable() {
                 @Override
@@ -108,6 +127,8 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                     Toast.makeText(getApplicationContext(),"Vote Sent!",Toast.LENGTH_SHORT).show();
                 }
             });
+        }else{
+            Log.d(TAG, "We dont care about this vote anymore");
         }
     }
 
@@ -120,7 +141,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                 //update the background slide
                 slidesImageView.setImageBitmap(media.getBitMap());
 
-                // TODO unlock voting interface
+                VOTING_LOCKED = false;
             }
         });
     }
@@ -140,11 +161,16 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
                 break;
             case UDPclient.VOTE_FAILURE:
-
+                Log.e(TAG, "Vote Failure");
                 // Check if we care about this failure
-                if((int)obj == voteID){
-                    pendingVoteButton.hide();   // Clear the loader
-                    Toast.makeText(this,"Vote Failed!",Toast.LENGTH_SHORT).show();
+                if((byte)obj == voteID){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            pendingVoteButton.hide();   // Clear the loader
+                            Toast.makeText(getApplicationContext(),"Vote Failed!",Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
                 break;
             default:
@@ -184,23 +210,31 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     };
 
-    //------------- Menu Click Handling Area --------------------
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_active_session, menu);
-        return true;
+    public void onHandshakeResponse(String reply) {
+        // Ignore
     }
 
-    public boolean onOptionsItemSelected(MenuItem item) {
+    private String wifiIpAddress() {
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
 
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
-                return true;
-            default:
-                return false;
+        // Convert little-endian to big-endianif needed
+        if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+            ipAddress = Integer.reverseBytes(ipAddress);
         }
+
+        byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
+
+        String ipAddressString;
+        try {
+            ipAddressString = InetAddress.getByAddress(ipByteArray).getHostAddress();
+        } catch (UnknownHostException ex) {
+            Log.e("WIFI-IP", "Unable to get host address.");
+            ipAddressString = null;
+        }
+
+        return ipAddressString;
     }
 
     @Override
@@ -230,30 +264,22 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     }
 
+    //------------- Menu Click Handling Area --------------------
     @Override
-    public void onHandshakeResponse(String reply) {
-        // Ignore
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_active_session, menu);
+        return true;
     }
 
-    private String wifiIpAddress() {
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+    public boolean onOptionsItemSelected(MenuItem item) {
 
-        // Convert little-endian to big-endianif needed
-        if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
-            ipAddress = Integer.reverseBytes(ipAddress);
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+            default:
+                return false;
         }
-
-        byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
-
-        String ipAddressString;
-        try {
-            ipAddressString = InetAddress.getByAddress(ipByteArray).getHostAddress();
-        } catch (UnknownHostException ex) {
-            Log.e("WIFI-IP", "Unable to get host address.");
-            ipAddressString = null;
-        }
-
-        return ipAddressString;
     }
 }

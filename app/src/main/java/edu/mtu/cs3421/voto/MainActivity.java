@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
                 ipAddress = addressEditText.getText().toString();
 
                 // The result will come back through the interface.
-                udp = new UDPclient(MainActivity.this,ipAddress, id);
+                udp = new UDPclient(MainActivity.this, ipAddress, id);
 
             }
         });

@@ -234,8 +234,10 @@ public class UDPclient {
                 listener.onFailure(VOTE_FAILURE, voteNumber);
             }
             else{
-                Log.d(TAG, "Vote Success");
-                listener.onVoteSuccess(voteNumber);
+                byte successfullID = MessageUtility.parseVoteResponse(res);
+                if(successfullID != -1) {
+                    listener.onVoteSuccess(successfullID);
+                }
             }
 
         }
@@ -375,7 +377,7 @@ public class UDPclient {
                 DatagramPacket rp = new DatagramPacket(buffer, buffer.length);
                 socket.receive(rp);
 
-                Log.d(TAG, "Send Successful");
+                //Log.d(TAG, "Send Successful");
                 return rp.getData();
 
             } catch (SocketTimeoutException e) {
