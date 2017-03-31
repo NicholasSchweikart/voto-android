@@ -32,7 +32,7 @@ import java.nio.ByteOrder;
 public class ActiveSessionActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     private static final String TAG = "Active-Session";
 
-    private FABProgressCircle aBtn, bBtn, cBtn, dBtn, pendingVoteButton;
+    private FABProgressCircle aBtn, bBtn, cBtn, dBtn;
     private View controlsOverlay;
     private ImageView slidesImageView;
     private Media media;
@@ -123,7 +123,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    pendingVoteButton.hide();   // Clear the loader
+
                     Toast.makeText(getApplicationContext(),"Vote Sent!",Toast.LENGTH_SHORT).show();
                 }
             });
@@ -167,7 +167,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            pendingVoteButton.hide();   // Clear the loader
+
                             Toast.makeText(getApplicationContext(),"Vote Failed!",Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -181,14 +181,6 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     View.OnClickListener voteButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-
-            // Check if a vote is pending
-            if(pendingVoteButton != null){
-                pendingVoteButton.hide();               // Clear the loader for the old vote
-            }
-
-            pendingVoteButton = (FABProgressCircle) v;  // Re-assign the pending vote button
-            pendingVoteButton.show();
 
             voteID += 1;                                // Increment the current vote_id
             String vote = null;
