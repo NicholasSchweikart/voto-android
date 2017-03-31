@@ -1,9 +1,11 @@
 package edu.mtu.cs3421.voto;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
+import android.net.wifi.WifiManager;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -22,26 +24,32 @@ import android.widget.Toast;
 
 import com.github.jorgecastilloprz.FABProgressCircle;
 
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteOrder;
+
 public class ActiveSessionActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     private static final String TAG = "Active-Session";
-    private UDPclient UDPclient;
+
     private FABProgressCircle aBtn, bBtn, cBtn, dBtn;
     private View controlsOverlay;
     private ImageView slidesImageView;
     private Media media;
+    private UDPclient udpClient;
     GestureDetectorCompat mDetector;
     Vibrator vibrator;
 
     // System Control Vars
     private byte voteID;
-    private String ID;
     private boolean VOTING_LOCKED;
-    private FABProgressCircle pendingVoteButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Log.d(TAG, "Starting Live Activity");
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -55,27 +63,29 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         slidesImageView = (ImageView)findViewById(R.id.slideImageView);
 
         // Retrieve the HOST ip address from the intent.
-        String ipAddressString = getIntent().getStringExtra("IP_ADDRESS_STRING");
+        String hostIpAddressString = getIntent().getStringExtra("IP_ADDRESS_STRING");
 
         // Init vote number to 0;
         voteID = 0;
 
+        String id;
+        SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String specialID = SP.getString("special_id", "NA");
+        if(specialID.equals("NA")){
+            id = wifiIpAddress();
+        }else{
+            id = specialID;
+        }
+
         // Create the UDPclient that will handle this entire session.
         // The result will come back through the interface.
-        UDPclient udpClient = new UDPclient(ActiveSessionActivity.this,ipAddressString);
-        if(!udpClient.isServiceReady()) {
-            Toast.makeText(ActiveSessionActivity.this,"Invalid IP",Toast.LENGTH_SHORT).show();
-            finish();
-        }
-        udpClient.setMyID(null);
-        // Lock down the voting interface untill we have the slide loaded.
-        VOTING_LOCKED = false;
+        udpClient = new UDPclient(ActiveSessionActivity.this, hostIpAddressString, id);
 
-        // Start Media polling, this never stops untill the session is over...
-        udpClient.pollNewMedia();
+        // Lock down the voting interface until we have the slide loaded.
+        VOTING_LOCKED = true;
 
         // Put the session id stuff up in the title bar
-        getSupportActionBar().setTitle("Host@" + ipAddressString );
+        getSupportActionBar().setTitle("Host@" + hostIpAddressString );
         vibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
         controlsOverlay = (View)findViewById(R.id.controlsOverlay);
 
@@ -83,25 +93,42 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         aBtn = (FABProgressCircle)findViewById(R.id.aButton);
         aBtn.setOnClickListener(voteButtonListener);
 
+        bBtn = (FABProgressCircle)findViewById(R.id.bButton);
+        bBtn.setOnClickListener(voteButtonListener);
+
+        cBtn = (FABProgressCircle)findViewById(R.id.cButton);
+        cBtn.setOnClickListener(voteButtonListener);
+
+        dBtn = (FABProgressCircle)findViewById(R.id.dButton);
+        dBtn.setOnClickListener(voteButtonListener);
+
         mDetector = new GestureDetectorCompat(this, new MyGestureListener());
     }
 
     @Override
-    public void onVoteSuccess(int vote_id) {
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy()");
 
-        if(vote_id == voteID){
-            pendingVoteButton.hide();   // Clear the loader
-            Toast.makeText(this,"Vote Sent!",Toast.LENGTH_SHORT).show();
+        if(udpClient != null){
+            udpClient.stop();
+
         }
     }
 
     @Override
-    public void onVoteFailure(int vote_id) {
-
-        // Check if we care about this failure
+    public void onVoteSuccess(int vote_id) {
+        Log.d(TAG, "Vote Successful!");
         if(vote_id == voteID){
-            pendingVoteButton.hide();   // Clear the loader
-            Toast.makeText(this,"Vote Failed!",Toast.LENGTH_SHORT).show();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    Toast.makeText(getApplicationContext(),"Vote Sent!",Toast.LENGTH_SHORT).show();
+                }
+            });
+        }else{
+            Log.d(TAG, "We dont care about this vote anymore");
         }
     }
 
@@ -114,22 +141,46 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                 //update the background slide
                 slidesImageView.setImageBitmap(media.getBitMap());
 
-                // TODO unlock voting interface
+                VOTING_LOCKED = false;
             }
         });
+    }
+
+    @Override
+    public void onReady() {
+
+        // Start Media polling, this never stops until the session is over...
+        udpClient.pollNewMedia();
+    }
+
+    @Override
+    public void onFailure(int failureCode, Object obj) {
+
+        switch (failureCode){
+            case UDPclient.MEDIA_FAILURE:
+
+                break;
+            case UDPclient.VOTE_FAILURE:
+                Log.e(TAG, "Vote Failure");
+                // Check if we care about this failure
+                if((byte)obj == voteID){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            Toast.makeText(getApplicationContext(),"Vote Failed!",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     View.OnClickListener voteButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-
-            // Check if a vote is pending
-            if(pendingVoteButton != null){
-                pendingVoteButton.hide();               // Clear the loader for the old vote
-            }
-
-            pendingVoteButton = (FABProgressCircle) v;  // Re-assign the pending vote button
-            pendingVoteButton.show();
 
             voteID += 1;                                // Increment the current vote_id
             String vote = null;
@@ -147,9 +198,63 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                     vote = "D";
                     break;
             }
-            UDPclient.sendVote(vote,voteID);            // Send of the new vote
+            udpClient.sendVote(vote,voteID);            // Send of the new vote
         }
     };
+
+    @Override
+    public void onHandshakeResponse(String reply) {
+        // Ignore
+    }
+
+    private String wifiIpAddress() {
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+
+        // Convert little-endian to big-endianif needed
+        if (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) {
+            ipAddress = Integer.reverseBytes(ipAddress);
+        }
+
+        byte[] ipByteArray = BigInteger.valueOf(ipAddress).toByteArray();
+
+        String ipAddressString;
+        try {
+            ipAddressString = InetAddress.getByAddress(ipByteArray).getHostAddress();
+        } catch (UnknownHostException ex) {
+            Log.e("WIFI-IP", "Unable to get host address.");
+            ipAddressString = null;
+        }
+
+        return ipAddressString;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event){
+        this.mDetector.onTouchEvent(event);
+        return super.onTouchEvent(event);
+    }
+
+    private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+        private static final String DEBUG_TAG = "Gestures";
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            super.onLongPress(e);
+            Log.d(TAG, "Long Press");
+
+            if(!VOTING_LOCKED){
+                controlsOverlay.setVisibility(View.VISIBLE);
+            }
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            Log.d(TAG, "On Fling");
+            controlsOverlay.setVisibility(View.INVISIBLE);
+            return true;
+        }
+    }
 
     //------------- Menu Click Handling Area --------------------
     @Override
@@ -169,40 +274,4 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                 return false;
         }
     }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event){
-        this.mDetector.onTouchEvent(event);
-        return super.onTouchEvent(event);
-    }
-
-    private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
-        private static final String DEBUG_TAG = "Gestures";
-
-        @Override
-        public void onLongPress(MotionEvent e) {
-            super.onLongPress(e);
-            Log.d(TAG, "Long Press");
-            controlsOverlay.setVisibility(View.VISIBLE);
-
-        }
-
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            Log.d(TAG, "On Fling");
-            controlsOverlay.setVisibility(View.INVISIBLE);
-            return true;
-        }
-    }
-
-    @Override
-    public void onHandshakeFailure() {
-        // Ignore
-    }
-
-    @Override
-    public void onHandshakeResponse(String reply) {
-        // Ignore
-    }
-
 }
