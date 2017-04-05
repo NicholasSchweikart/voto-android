@@ -1,10 +1,13 @@
 package edu.mtu.cs3421.voto;
 
 
+import android.icu.text.SymbolTable;
 import android.util.Log;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * Created for Voto
@@ -180,7 +183,9 @@ public class UDPclient {
                 listener.onFailure(HANDSHAKE_FAILURE, null);
             }
             else{
-                listener.onHandshakeResponse(new String(res).trim());
+
+                byte[] trimmed = Arrays.copyOfRange(res, 2, res.length-2);
+                listener.onHandshakeResponse(new String(trimmed).trim());
             }
 
         }

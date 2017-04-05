@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.net.wifi.WifiManager;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NavUtils;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -22,8 +23,6 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.github.jorgecastilloprz.FABProgressCircle;
-
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -32,7 +31,7 @@ import java.nio.ByteOrder;
 public class ActiveSessionActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     private static final String TAG = "Active-Session";
 
-    private FABProgressCircle aBtn, bBtn, cBtn, dBtn;
+    private FloatingActionButton aBtn, bBtn, cBtn, dBtn;
     private View controlsOverlay;
     private ImageView slidesImageView;
     private Media media;
@@ -64,6 +63,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
         // Retrieve the HOST ip address from the intent.
         String hostIpAddressString = getIntent().getStringExtra("IP_ADDRESS_STRING");
+        String hostSessionName = getIntent().getStringExtra("HOST_SESSION_NAME");
 
         // Init vote number to 0;
         voteID = 0;
@@ -85,21 +85,21 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         VOTING_LOCKED = true;
 
         // Put the session id stuff up in the title bar
-        getSupportActionBar().setTitle("Host@" + hostIpAddressString );
+        getSupportActionBar().setTitle("Connected to:" + hostSessionName );
         vibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
         controlsOverlay = (View)findViewById(R.id.controlsOverlay);
 
         // Initialize all the voting buttons
-        aBtn = (FABProgressCircle)findViewById(R.id.aButton);
+        aBtn = (FloatingActionButton) findViewById(R.id.aButton);
         aBtn.setOnClickListener(voteButtonListener);
 
-        bBtn = (FABProgressCircle)findViewById(R.id.bButton);
+        bBtn = (FloatingActionButton)findViewById(R.id.bButton);
         bBtn.setOnClickListener(voteButtonListener);
 
-        cBtn = (FABProgressCircle)findViewById(R.id.cButton);
+        cBtn = (FloatingActionButton)findViewById(R.id.cButton);
         cBtn.setOnClickListener(voteButtonListener);
 
-        dBtn = (FABProgressCircle)findViewById(R.id.dButton);
+        dBtn = (FloatingActionButton)findViewById(R.id.dButton);
         dBtn.setOnClickListener(voteButtonListener);
 
         mDetector = new GestureDetectorCompat(this, new MyGestureListener());
@@ -158,7 +158,14 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
         switch (failureCode){
             case UDPclient.MEDIA_FAILURE:
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
 
+                        Toast.makeText(getApplicationContext(),"Session Over",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                finish();
                 break;
             case UDPclient.VOTE_FAILURE:
                 Log.e(TAG, "Vote Failure");
@@ -239,13 +246,14 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         private static final String DEBUG_TAG = "Gestures";
 
         @Override
-        public void onLongPress(MotionEvent e) {
-            super.onLongPress(e);
-            Log.d(TAG, "Long Press");
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            super.onSingleTapConfirmed(e);
+            Log.d(TAG, "Tap event");
 
             if(!VOTING_LOCKED){
                 controlsOverlay.setVisibility(View.VISIBLE);
             }
+            return true;
         }
 
         @Override

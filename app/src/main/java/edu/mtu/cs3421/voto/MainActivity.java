@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
     private EditText addressEditText;
     private String ipAddress;
     private  UDPclient udp;
-
+    private String id;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,19 +39,10 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         setSupportActionBar(toolbar);
 
         Button joinButton = (Button)findViewById(R.id.joinButton);
-        Button hostButton = (Button)findViewById(R.id.hostButton);
 
         addressEditText = (EditText)findViewById(R.id.ipEditText);
 
-        // Load in the special ID or use the IP address if not enabled.
-        final String id;
-        SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        String specialID = SP.getString("special_id", "NA");
-        if(specialID.equals("NA")){
-            id = wifiIpAddress();
-        }else{
-            id = specialID;
-        }
+
 
         joinButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,12 +55,6 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
             }
         });
 
-        hostButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //TODO implement real host button
-            }
-        });
     }
 
     @Override
@@ -100,6 +85,16 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart()");
+
+        // Load in the special ID or use the IP address if not enabled.
+
+        SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String specialID = SP.getString("special_id", "NA");
+        if(specialID.equals("NA")){
+            id = wifiIpAddress();
+        }else{
+            id = specialID;
+        }
     }
 
     @Override
@@ -109,9 +104,11 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
 
     }
 
-    private void startSession(){
+    private void startSession(String sessionName){
         Intent intent = new Intent(getApplicationContext(),ActiveSessionActivity.class);
         intent.putExtra("IP_ADDRESS_STRING", ipAddress);
+        if(sessionName != null)
+            intent.putExtra("HOST_SESSION_NAME", sessionName);
         startActivity(intent);
     }
 
@@ -125,8 +122,7 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
     public void onHandshakeResponse(String reply) {
 
         Log.d(TAG, "Handshake Recieved");
-        startSession();
-
+        startSession(reply);
     }
 
     @Override

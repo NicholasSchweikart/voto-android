@@ -23,7 +23,7 @@
         android:layout_below="@+id/tool_bar"
         android:layout_margin="@dimen/activity_horizontal_margin"
         android:gravity="center">
-        <EditText
+        <edu.mtu.cs3421.voto.EditTextIPAddress
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Enter Host Number"
@@ -33,14 +33,8 @@
         <Button
             android:text="Join Session"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="80dp"
             android:id="@+id/joinButton" />
-
-        <Button
-            android:text="Host Session"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/hostButton" />
     </LinearLayout>
 
 </RelativeLayout>
