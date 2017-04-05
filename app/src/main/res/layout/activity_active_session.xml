@@ -8,37 +8,34 @@
     tools:context="edu.mtu.cs3421.voto.ActiveSessionActivity"
     >
 
-    <include layout="@layout/tool_bar"
-        android:id="@+id/tool_bar">
-    </include>
-
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/slideImageView"
-        android:layout_below="@+id/tool_bar"
         android:scaleType="fitCenter"/>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:elevation="3dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerInParent="true"
-        android:id="@+id/controlsOverlay"
-        android:visibility="invisible">
 
-        <FrameLayout
+        android:visibility="invisible"
+        android:id="@+id/controlsOverlay">
+
+        <include layout="@layout/tool_bar"
+            android:id="@+id/tool_bar">
+        </include>
+
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:elevation="3dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true">
 
-            <com.github.jorgecastilloprz.FABProgressCircle
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:arcColor="#00ffff"
-                app:arcWidth="4dp"
-                android:id="@+id/aButton">
+                android:layout_height="wrap_content">
 
                 <android.support.design.widget.FloatingActionButton
                     android:layout_width="wrap_content"
@@ -46,111 +43,90 @@
                     android:gravity="center"
                     app:arc_origin="center"
                     android:layout_margin="10dp"
-                    android:hapticFeedbackEnabled="false" />
-            </com.github.jorgecastilloprz.FABProgressCircle>
+                    android:hapticFeedbackEnabled="false"
+                    android:id="@+id/aButton"/>
 
-            <TextView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="A"
+                    android:elevation="16dp"
+                    android:textColor="@android:color/white"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </FrameLayout>
+
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="A"
-                android:elevation="16dp"
-                android:textColor="@android:color/white"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <com.github.jorgecastilloprz.FABProgressCircle
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:arcColor="#00ffff"
-                app:arcWidth="7dp"
-                android:id="@+id/bButton"
-                >
+                android:layout_height="wrap_content">
 
                 <android.support.design.widget.FloatingActionButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     app:arc_origin="center"
-                    android:layout_margin="10dp"/>
-            </com.github.jorgecastilloprz.FABProgressCircle>
+                    android:layout_margin="10dp"
+                    android:id="@+id/bButton"/>
 
-            <TextView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="B"
+                    android:elevation="16dp"
+                    android:textColor="@android:color/white"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </FrameLayout>
+
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="B"
-                android:elevation="16dp"
-                android:textColor="@android:color/white"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <com.github.jorgecastilloprz.FABProgressCircle
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:arcColor="#00ffff"
-                app:arcWidth="7dp"
-                android:id="@+id/cButton"
-                >
+                android:layout_height="wrap_content">
 
                 <android.support.design.widget.FloatingActionButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     app:arc_origin="center"
-                    android:layout_margin="10dp"/>
-            </com.github.jorgecastilloprz.FABProgressCircle>
+                    android:layout_margin="10dp"
+                    android:id="@+id/cButton"/>
 
-            <TextView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="C"
+                    android:elevation="16dp"
+                    android:textColor="@android:color/white"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </FrameLayout>
+
+            <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="C"
-                android:elevation="16dp"
-                android:textColor="@android:color/white"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <com.github.jorgecastilloprz.FABProgressCircle
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:arcColor="#00ffff"
-                app:arcWidth="7dp"
-                android:id="@+id/dButton"
-                >
+                android:layout_height="wrap_content">
 
                 <android.support.design.widget.FloatingActionButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     app:arc_origin="center"
-                    android:layout_margin="10dp"/>
-            </com.github.jorgecastilloprz.FABProgressCircle>
+                    android:layout_margin="10dp"
+                    android:id="@+id/dButton"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="D"
-                android:elevation="16dp"
-                android:textColor="@android:color/white"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-        </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="D"
+                    android:elevation="16dp"
+                    android:textColor="@android:color/white"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </FrameLayout>
 
 
-    </LinearLayout>
+        </LinearLayout>
+
+    </RelativeLayout>
+
 
 
 </RelativeLayout>
