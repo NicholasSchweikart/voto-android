@@ -307,6 +307,8 @@ public class UDPclient {
                         if(!loadMedia()){
                             Log.e(TAG, "Failed to load media");
                             media = null;
+                            listener.onFailure(MEDIA_FAILURE,null);
+                            return;
                         }else{
                             listener.onMediaAvailable(media);
                         }
@@ -344,6 +346,7 @@ public class UDPclient {
                 // Process the message
                 if(! MessageUtility.parseMediaResponse(msgIn,media) ){
                     Log.e(TAG, "Error wrong headers media request response");
+                    return false;
                 }
 
                 // If we have all of the data then stop

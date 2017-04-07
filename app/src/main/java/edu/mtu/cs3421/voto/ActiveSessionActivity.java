@@ -31,7 +31,7 @@ import java.nio.ByteOrder;
 public class ActiveSessionActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     private static final String TAG = "Active-Session";
 
-    private FloatingActionButton aBtn, bBtn, cBtn, dBtn;
+    private FloatingActionButton aBtn, bBtn, cBtn, dBtn, eBtn;
     private View controlsOverlay;
     private ImageView slidesImageView;
     private Media media;
@@ -102,6 +102,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         dBtn = (FloatingActionButton)findViewById(R.id.dButton);
         dBtn.setOnClickListener(voteButtonListener);
 
+        eBtn = (FloatingActionButton)findViewById(R.id.eButton);
+        eBtn.setOnClickListener(voteButtonListener);
+
         mDetector = new GestureDetectorCompat(this, new MyGestureListener());
     }
 
@@ -112,7 +115,6 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
         if(udpClient != null){
             udpClient.stop();
-
         }
     }
 
@@ -134,6 +136,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
     @Override
     public void onMediaAvailable(Media mediaNew) {
+        Log.d(TAG,"Showing new media");
         media = mediaNew;
         runOnUiThread(new Runnable() {
             @Override
@@ -163,6 +166,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                     public void run() {
 
                         Toast.makeText(getApplicationContext(),"Session Over",Toast.LENGTH_SHORT).show();
+                        finish();
                     }
                 });
                 finish();
@@ -203,6 +207,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
                     break;
                 case R.id.dButton:
                     vote = "D";
+                    break;
+                case R.id.eButton:
+                    vote = "E";
                     break;
             }
             udpClient.sendVote(vote,voteID);            // Send of the new vote
@@ -251,15 +258,11 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
             Log.d(TAG, "Tap event");
 
             if(!VOTING_LOCKED){
-                controlsOverlay.setVisibility(View.VISIBLE);
+                if(controlsOverlay.getVisibility() == View.VISIBLE)
+                    controlsOverlay.setVisibility(View.INVISIBLE);
+                else
+                    controlsOverlay.setVisibility(View.VISIBLE);
             }
-            return true;
-        }
-
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            Log.d(TAG, "On Fling");
-            controlsOverlay.setVisibility(View.INVISIBLE);
             return true;
         }
     }

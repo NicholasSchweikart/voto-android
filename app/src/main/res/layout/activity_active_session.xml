@@ -122,7 +122,27 @@
                     android:textAppearance="?android:attr/textAppearanceMedium" />
             </FrameLayout>
 
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
 
+                <android.support.design.widget.FloatingActionButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    app:arc_origin="center"
+                    android:layout_margin="10dp"
+                    android:id="@+id/eButton"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="E"
+                    android:elevation="16dp"
+                    android:textColor="@android:color/white"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </FrameLayout>
         </LinearLayout>
 
     </RelativeLayout>
