@@ -1,4 +1,4 @@
-package edu.mtu.cs3421.voto;
+package edu.mtu.cs3421.voto.Activities;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -28,6 +28,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
 
+import edu.mtu.cs3421.voto.VotoComponents.Media;
+import edu.mtu.cs3421.voto.R;
+import edu.mtu.cs3421.voto.VotoComponents.UDPclient;
+
+/**
+ * This runs the live voting session and communicates the the Voto Host.
+ */
 public class ActiveSessionActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     private static final String TAG = "Active-Session";
 
@@ -68,6 +75,8 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         // Init vote number to 0;
         voteID = 0;
 
+        // Load in the unique identifier from preferences if it exists; otherwise we will use the
+        // device IP address
         String id;
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         String specialID = SP.getString("special_id", "NA");
@@ -105,6 +114,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         eBtn = (FloatingActionButton)findViewById(R.id.eButton);
         eBtn.setOnClickListener(voteButtonListener);
 
+        // Assign our custom Gesture Detector to control the voting overlay.
         mDetector = new GestureDetectorCompat(this, new MyGestureListener());
     }
 
@@ -125,7 +135,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-
+                    // Tell the user their vote was sent and processed.
                     Toast.makeText(getApplicationContext(),"Vote Sent!",Toast.LENGTH_SHORT).show();
                 }
             });
@@ -141,9 +151,11 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+
                 //update the background slide
                 slidesImageView.setImageBitmap(media.getBitMap());
 
+                // Unlock the voting interface
                 VOTING_LOCKED = false;
             }
         });
@@ -152,13 +164,15 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     @Override
     public void onReady() {
 
-        // Start Media polling, this never stops until the session is over...
+        // Start Media polling, this will terminate the session if no response is had after the
+        // set timout delay.
         udpClient.pollNewMedia();
     }
 
     @Override
     public void onFailure(int failureCode, Object obj) {
 
+        // Process any failure codes thrown by the UDP client
         switch (failureCode){
             case UDPclient.MEDIA_FAILURE:
                 runOnUiThread(new Runnable() {
@@ -189,6 +203,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     }
 
+    // Listener that all vote buttons will share
     View.OnClickListener voteButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -218,9 +233,13 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
 
     @Override
     public void onHandshakeResponse(String reply) {
-        // Ignore
+        // IGNORE WE WONT GET HANDSHAKES EVER
     }
 
+    /**
+     * Gets the IP address of this device via the WiFi manager.
+     * @return the ip address as a string.
+     */
     private String wifiIpAddress() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
@@ -257,6 +276,8 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
             super.onSingleTapConfirmed(e);
             Log.d(TAG, "Tap event");
 
+            // On tap we will toggle the visibilty of the UI controls overlay. This includes the
+            // voting and navigation buttons.
             if(!VOTING_LOCKED){
                 if(controlsOverlay.getVisibility() == View.VISIBLE)
                     controlsOverlay.setVisibility(View.INVISIBLE);
@@ -267,7 +288,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     }
 
-    //------------- Menu Click Handling Area --------------------
+    //---------------------- Menu Click Handling Area ----------------------------------------------
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

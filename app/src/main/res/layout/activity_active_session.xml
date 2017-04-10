@@ -5,7 +5,7 @@
     android:id="@+id/activity_active_session"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.mtu.cs3421.voto.ActiveSessionActivity"
+    tools:context="edu.mtu.cs3421.voto.Activities.ActiveSessionActivity"
     >
 
     <ImageView

@@ -1,12 +1,10 @@
-package edu.mtu.cs3421.voto;
+package edu.mtu.cs3421.voto.VotoComponents;
 
 
-import android.icu.text.SymbolTable;
 import android.util.Log;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
@@ -43,7 +41,7 @@ public class UDPclient {
      * @param HOST_IP_STRING Your indented hosts IP address
      * @param myID Your ID for this session.
      */
-    UDPclient(UDPServiceListener listener, String HOST_IP_STRING, String myID) {
+    public UDPclient(UDPServiceListener listener, String HOST_IP_STRING, String myID) {
         Log.d(TAG, "New UDP Client: HOST: " + HOST_IP_STRING + "myID: " + myID);
         this.listener = listener;
         HOST_PORT = 9876;

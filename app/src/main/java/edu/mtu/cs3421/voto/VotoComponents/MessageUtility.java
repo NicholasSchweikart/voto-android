@@ -1,23 +1,25 @@
-package edu.mtu.cs3421.voto;
+package edu.mtu.cs3421.voto.VotoComponents;
 
 import android.util.Log;
 
 import java.nio.ByteBuffer;
 
 /**
- * Created by nicholasyamahamanschweikart on 3/1/17.
+ * Created by Nicholas Schweikart on 3/1/17.
+ *
+ * This provides a static set of utilities to parse incoming and outgoing Voto messages.
  */
-
 public class MessageUtility {
     private static final String TAG = "message-util";
-    public static final byte
+
+    // Const flag fields for message headers
+    private static final byte
             HANDSHAKE_REQUEST   = (byte) 'R',
             VOTE_REQUEST        = (byte) 'V',
             VOTE_RESPONSE       = (byte) 'R',
             MEDIA_REQUEST       = (byte) 'M',
             MEDIA_PING          = (byte) 'P',
             MEDIA_RESPONSE      = (byte) 'R';
-
 
     /**
      * Builds a handshake request message.
@@ -42,6 +44,13 @@ public class MessageUtility {
         return message;
     }
 
+    /**
+     * Gets a voto vote message for the host.
+     * @param id the special ID for the user
+     * @param vote the vote data
+     * @param voteID the ID number for this vote
+     * @return the Voto Vote message to send.
+     */
     public static byte[] getVoteMessage(String id, String vote, byte voteID){
 
         byte[] message;
@@ -81,6 +90,10 @@ public class MessageUtility {
         return message;
     }
 
+    /**
+     * Gets a media ping message for a Voto Host.
+     * @return the ping message
+     */
     public static byte[] getMediaPingMessage(){
         byte[] message = new byte[1 + 1];
         message[0] = MEDIA_REQUEST;
@@ -88,6 +101,12 @@ public class MessageUtility {
         return message;
     }
 
+    /**
+     * Gets a media request message for a voto host.
+     * @param imgID the ID of the image you want data from
+     * @param packetNumber the image data packet number you need
+     * @return the media request message byte array
+     */
     public static byte[] getMediaRequestMessage(byte imgID, int packetNumber){
         byte[] message = new byte[3 + 4];
         message[0] = MEDIA_REQUEST;
@@ -98,6 +117,11 @@ public class MessageUtility {
         return message;
     }
 
+    /**
+     * Parses a vote response message from the host
+     * @param message the message byte[] to parse
+     * @return the vote ID number that was acknowledged
+     */
     public static byte parseVoteResponse(byte[] message){
         byte voteID = -1;
         if(message[0] == VOTE_REQUEST && message[1] == VOTE_RESPONSE){
@@ -106,6 +130,12 @@ public class MessageUtility {
         return voteID;
     }
 
+    /**
+     * Parses a media ping response message from the HOST
+     * @param msg the message from the host
+     * @param res a Media Response object to pack with data from this response
+     * @return true if the message parse was successful
+     */
     public static boolean parseMediaPing(byte[] msg, UDPclient.MediaResponse res){
 
         // Check for proper message headers
@@ -126,6 +156,12 @@ public class MessageUtility {
         return false;
     }
 
+    /**
+     * Parses a media response message from a host
+     * @param msg the message to parse
+     * @param media the media object to load new data into from the response
+     * @return true if the parse was successful.
+     */
     public static boolean parseMediaResponse(byte[] msg, Media media){
 
         // Check for proper message headers
@@ -149,6 +185,5 @@ public class MessageUtility {
 
         return false;
     }
-
 
 }

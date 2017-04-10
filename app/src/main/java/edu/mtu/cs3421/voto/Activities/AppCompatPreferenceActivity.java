@@ -1,4 +1,4 @@
-package edu.mtu.cs3421.voto;
+package edu.mtu.cs3421.voto.Activities;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

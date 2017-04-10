@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="edu.mtu.cs3421.voto.MainActivity">
+    tools:context="edu.mtu.cs3421.voto.Activities.MainActivity">
 
     <include layout="@layout/tool_bar"
         android:id="@+id/tool_bar">
@@ -17,7 +17,7 @@
         android:id="@+id/content_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="edu.mtu.cs3421.voto.MainActivity"
+        tools:context="edu.mtu.cs3421.voto.Activities.MainActivity"
         tools:showIn="@layout/activity_main"
         android:orientation="vertical"
         android:layout_below="@+id/tool_bar"
