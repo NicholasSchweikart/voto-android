@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         // Load in the special ID or use the IP address of this device if not available.
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         String specialID = SP.getString("special_id", "NA");
-        if(specialID.equals("NA")){
+        if(specialID.equals("JohnSmith12")){
             id = wifiIpAddress();
         }else{
             id = specialID;

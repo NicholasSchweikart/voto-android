@@ -80,7 +80,7 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         String id;
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         String specialID = SP.getString("special_id", "NA");
-        if(specialID.equals("NA")){
+        if(specialID.equals("JohnSmith12")){
             id = wifiIpAddress();
         }else{
             id = specialID;
