@@ -1,4 +1,4 @@
-package edu.mtu.cs3421.voto;
+package edu.mtu.cs3421.voto.Activities;
 
 
 import android.annotation.TargetApi;
@@ -14,7 +14,7 @@ import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 
-import java.util.List;
+import edu.mtu.cs3421.voto.R;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -45,10 +45,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 int index = listPreference.findIndexOfValue(stringValue);
 
                 // Set the summary to reflect the new value.
-                preference.setSummary(
-                        index >= 0
-                                ? listPreference.getEntries()[index]
-                                : null);
+                preference.setSummary(index >= 0 ? listPreference.getEntries()[index]: null);
 
             } else {
                 // For all other preferences, set the summary to the value's

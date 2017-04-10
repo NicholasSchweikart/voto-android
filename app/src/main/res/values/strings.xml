@@ -11,7 +11,7 @@
     <!-- Example General settings -->
 
     <string name="pref_title_display_name">Special ID</string>
-    <string name="pref_default_display_name">JohnSmit12</string>
+    <string name="pref_default_display_name">JohnSmith12</string>
     <string name="pref_special_id_summery">This field can be any special identifier your host whishes you to use.</string>
 
 </resources>

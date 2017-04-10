@@ -1,12 +1,9 @@
-package edu.mtu.cs3421.voto;
+package edu.mtu.cs3421.voto.Activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -20,10 +17,16 @@ import android.widget.Toast;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
 
+import edu.mtu.cs3421.voto.VotoComponents.Media;
+import edu.mtu.cs3421.voto.R;
+import edu.mtu.cs3421.voto.VotoComponents.UDPclient;
+
+/**
+ * Runs the laucher activity for the App. Allows the user to join a host and start a Voto session.
+ */
 public class MainActivity extends AppCompatActivity implements UDPclient.UDPServiceListener {
     public static final String TAG = "Activity-Main";
     private EditText addressEditText;
@@ -38,12 +41,11 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         Toolbar toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
 
+        // Access the UI components
         Button joinButton = (Button)findViewById(R.id.joinButton);
-
         addressEditText = (EditText)findViewById(R.id.ipEditText);
 
-
-
+        // Set the On Click event for join to handshake with host.
         joinButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -86,11 +88,10 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         super.onStart();
         Log.d(TAG, "onStart()");
 
-        // Load in the special ID or use the IP address if not enabled.
-
+        // Load in the special ID or use the IP address of this device if not available.
         SharedPreferences SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         String specialID = SP.getString("special_id", "NA");
-        if(specialID.equals("NA")){
+        if(specialID.equals("JohnSmith12")){
             id = wifiIpAddress();
         }else{
             id = specialID;
@@ -104,18 +105,26 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
 
     }
 
+    /**
+     * Start a new Voto Session with the host found by the handshake.
+     * @param sessionName the name of the host that we will be connecting with
+     */
     private void startSession(String sessionName){
+
+        // Add relevant values into the Intent so the session activty knows whats up
         Intent intent = new Intent(getApplicationContext(),ActiveSessionActivity.class);
         intent.putExtra("IP_ADDRESS_STRING", ipAddress);
         if(sessionName != null)
             intent.putExtra("HOST_SESSION_NAME", sessionName);
+
+        // Start the session activity
         startActivity(intent);
     }
 
 
     @Override
     public void onVoteSuccess(int message_id) {
-
+        //IGNORE
     }
 
     @Override
@@ -127,17 +136,18 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
 
     @Override
     public void onMediaAvailable(Media media) {
-
+        //IGNORE
     }
 
     @Override
     public void onReady() {
-
+        // Send a handshake message to the HOST IP.
         udp.sendHandshake();
     }
 
     @Override
     public void onFailure(int failureCode, Object obj) {
+        // Process any failure codes thrown from the UDP client
         switch (failureCode){
             case UDPclient.HANDSHAKE_FAILURE:
                 runOnUiThread(new Runnable() {
@@ -158,6 +168,10 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         }
     }
 
+    /**
+     * Gets the IP address of this device via the WiFi manager.
+     * @return the ip address as a string.
+     */
     private String wifiIpAddress() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
