@@ -41,7 +41,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    app:arc_origin="center"
                     android:layout_margin="10dp"
                     android:hapticFeedbackEnabled="false"
                     android:id="@+id/aButton"/>
@@ -64,7 +63,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    app:arc_origin="center"
                     android:layout_margin="10dp"
                     android:id="@+id/bButton"/>
 
@@ -86,7 +84,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    app:arc_origin="center"
                     android:layout_margin="10dp"
                     android:id="@+id/cButton"/>
 
@@ -108,7 +105,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    app:arc_origin="center"
                     android:layout_margin="10dp"
                     android:id="@+id/dButton"/>
 
@@ -130,7 +126,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    app:arc_origin="center"
                     android:layout_margin="10dp"
                     android:id="@+id/eButton"/>
 
