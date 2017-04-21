@@ -188,6 +188,10 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         udpClient.pollNewMedia();
     }
 
+    /**
+     * Process any failure codes thrown by the UDP client, notifying user
+     * if session is over or vote failed to send
+     */
     @Override
     public void onFailure(int failureCode, Object obj) {
 
@@ -222,7 +226,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     }
 
-    // Listener that all vote buttons will share
+    /**
+     * Listener that all vote buttons will share
+     */
     View.OnClickListener voteButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -250,6 +256,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     };
 
+    /**
+     * Unused
+     */
     @Override
     public void onHandshakeResponse(String reply) {
         // IGNORE WE WONT GET HANDSHAKES EVER
@@ -281,6 +290,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         return ipAddressString;
     }
 
+    /**
+     * Called on occurance of touch screen event
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event){
         this.mDetector.onTouchEvent(event);
@@ -290,6 +302,10 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final String DEBUG_TAG = "Gestures";
 
+        /**
+         * On tap we will toggle the visibilty of the UI controls overlay. This includes the
+         *  voting and navigation buttons.
+         */
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
             super.onSingleTapConfirmed(e);
@@ -308,6 +324,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     }
 
     //---------------------- Menu Click Handling Area ----------------------------------------------
+    /**
+     * Inflate the menu; this adds items to the action bar if it is present.
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -315,6 +334,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         return true;
     }
 
+    /**
+     * Return to parent activity
+     */
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
