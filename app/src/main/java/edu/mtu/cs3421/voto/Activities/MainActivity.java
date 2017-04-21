@@ -59,6 +59,9 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
 
     }
 
+    /**
+     * Opens the option menu and add items
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -66,6 +69,9 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         return true;
     }
 
+    /**
+     * Handle action bar item clicks
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -83,6 +89,9 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * On start, get devices IP address or special ID
+     */
     @Override
     public void onStart() {
         super.onStart();
@@ -98,6 +107,9 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         }
     }
 
+    /**
+     * Restores state if app state was paused and not destroyed
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -121,30 +133,44 @@ public class MainActivity extends AppCompatActivity implements UDPclient.UDPServ
         startActivity(intent);
     }
 
-
+    /**
+     * Unused
+     */
     @Override
     public void onVoteSuccess(int message_id) {
         //IGNORE
     }
 
+    /**
+     * Reply with handshake response and store "Handshake Recieved" for debugging
+     */
     @Override
     public void onHandshakeResponse(String reply) {
-
         Log.d(TAG, "Handshake Recieved");
         startSession(reply);
     }
 
+    /**
+     * Unused
+     */
     @Override
     public void onMediaAvailable(Media media) {
         //IGNORE
     }
 
+    /**
+     * Send a handshake message to the HOST IP.
+     */
     @Override
     public void onReady() {
         // Send a handshake message to the HOST IP.
         udp.sendHandshake();
     }
 
+    /**
+     * Handles failure code from UDP client, notifying user if host
+     * wasn't found or the IP address entered isn't valid
+     */
     @Override
     public void onFailure(int failureCode, Object obj) {
         // Process any failure codes thrown from the UDP client
