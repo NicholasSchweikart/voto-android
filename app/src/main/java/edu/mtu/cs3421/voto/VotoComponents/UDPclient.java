@@ -154,6 +154,9 @@ public class UDPclient {
 
         }
 
+        /**
+         * Get a socket for the handshake to use and attempt to send the message to the target host.
+         */
         @Override
         public void run() {
             Log.d(TAG, "Attempting Handshake...");
@@ -209,6 +212,9 @@ public class UDPclient {
             this.voteNumber = voteNumber;
         }
 
+        /**
+         * Make sure we can get UDP Socket, construct message, and send vote
+         */
         @Override
         public void run() {
             Log.d(TAG, "Attempting Vote...");
@@ -417,6 +423,9 @@ public class UDPclient {
         return out;
     }
 
+    /**
+     * Contains data for a media response
+     */
     class MediaResponse{
         int imgLength;
         byte imgID;
