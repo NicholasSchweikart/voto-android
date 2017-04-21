@@ -50,6 +50,11 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
     private byte voteID;
     private boolean VOTING_LOCKED;
 
+    /**
+     * The activity is being created. This starts the UDPClient and creates
+     * all the buttons to be voted upon.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,6 +123,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         mDetector = new GestureDetectorCompat(this, new MyGestureListener());
     }
 
+    /**
+     * When the activity ends, stops the client and destroys
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -128,6 +136,10 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     }
 
+    /**
+     * Vote is successful and displaying the Vote Sent! Toast
+     * @param vote_id
+     */
     @Override
     public void onVoteSuccess(int vote_id) {
         Log.d(TAG, "Vote Successful!");
@@ -144,6 +156,10 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         }
     }
 
+    /**
+     * Ned media has been start and needs to be displayed
+     * @param mediaNew
+     */
     @Override
     public void onMediaAvailable(Media mediaNew) {
         Log.d(TAG,"Showing new media");
@@ -161,6 +177,9 @@ public class ActiveSessionActivity extends AppCompatActivity implements UDPclien
         });
     }
 
+    /**
+     * Start to see if theres new media
+     */
     @Override
     public void onReady() {
 
