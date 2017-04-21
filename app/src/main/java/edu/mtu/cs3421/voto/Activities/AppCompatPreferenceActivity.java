@@ -111,6 +111,9 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
         getDelegate().setTitle(title);
     }
 
+    /**
+     * Update configuration (portrait or landscape)
+     */
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
